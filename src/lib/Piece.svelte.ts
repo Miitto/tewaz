@@ -9,25 +9,29 @@ export const enum Team {
 }
 
 export interface Piece {
-	type: PieceType;
 	team: Team;
 
-	getType(): PieceType;
+	get type(): PieceType;
+	instanceNo: number;
 	getMoveOffsets(): [number, number][];
 	getMoveCost(): number;
 }
 
-export class Fish {
-	type: PieceType;
+export class Fish implements Piece {
 	team: Team;
+	t: PieceType;
+	instanceNo: number;
+	static nextNo = 0;
 
 	constructor(team: Team) {
-		this.type = PieceType.FISH;
 		this.team = team;
+		this.t = PieceType.FISH;
+		this.instanceNo = Fish.nextNo;
+		Fish.nextNo++;
 	}
 
-	getType(): PieceType {
-		return this.type;
+	get type(): PieceType {
+		return this.t;
 	}
 
 	getMoveOffsets(): [number, number][] {
@@ -39,15 +43,20 @@ export class Fish {
 	}
 }
 
-export class Hunter {
-	type: PieceType;
+export class Hunter implements Piece {
 	team: Team;
+	t: PieceType;
+	instanceNo: number;
+	static nextNo = 0;
+
 	constructor(team: Team) {
-		this.type = PieceType.HUNTER;
 		this.team = team;
+		this.t = PieceType.HUNTER;
+		this.instanceNo = Hunter.nextNo;
+		Hunter.nextNo++;
 	}
-	getType(): PieceType {
-		return this.type;
+	get type(): PieceType {
+		return this.t;
 	}
 	getMoveOffsets(): [number, number][] {
 		return [[1, 1], [-1, 1], [1, -1], [-1, -1]];
