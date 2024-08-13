@@ -32,7 +32,25 @@ export class Board {
 		return this.board[row][col];
 	}
 
-	teamColCount(col: number, team: Team): number {
-		return this.board.filter((row) => row[col]?.team === team).length;
+	/**
+	 *
+	 * @param col col to count
+	 * @param team team to count
+	 * @param moveOriginExclude ignore moves originating from this position (usually the move being checked)
+	 * @param rowExcludes don't count pieces in these rows, usually from pieces in that location that are staged to move
+	 * @returns number of pieces in the column from the given team
+	 */
+	teamColCount(
+		col: number,
+		team: Team,
+		moveOriginExclude: [number, number] | null = null,
+		rowExcludes: number[] | null = null
+	): number {
+		return this.board.filter(
+			(row, i) =>
+				(!rowExcludes || !rowExcludes.includes(i)) &&
+				row[col]?.team === team &&
+				(!moveOriginExclude || (i != moveOriginExclude[0] && col != moveOriginExclude[1]))
+		).length;
 	}
 }

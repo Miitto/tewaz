@@ -21,16 +21,11 @@
 	}
 
 	function pendMove(i: number, j: number) {
-		console.log('Pend move', selectedPiece, [i, j]);
 		if (selectedPiece) {
 			game.stageMove(selectedPiece, [i, j]);
 			selectedPiece = null;
 		}
 	}
-
-	$effect(() => {
-		console.log(game.pendingMoves);
-	});
 </script>
 
 <div

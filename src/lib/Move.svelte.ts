@@ -27,7 +27,7 @@ export class Move {
 		return this.position[0] === position[0] && this.position[1] === position[1];
 	}
 
-	isValid(skipMoveCost = false, ignoreThisMove = false): boolean {
+	isValid(skipMoveCost = false): boolean {
 		const board = this.game.board;
 		const [x, y] = this.position;
 		let [nx, ny] = this.target;
@@ -57,20 +57,19 @@ export class Move {
 			return false;
 		}
 
-		// FIXME: Need this to work before the pending move is added to the list as well. Some sort of exclusion for the current move? Might be fixed need to check
 		// Ensure column is not at max capacity
 		if (sandZoneCols.includes(ny)) {
 			if (
-				this.game.stagedTeamColCount(ny, this.piece.team, this) >=
-				this.game.teamMaxInSandCol + (ignoreThisMove ? 1 : 0)
+				this.game.stagedTeamColCount(ny, this.piece.team, this.position) >=
+				this.game.teamMaxInSandCol
 			) {
 				console.log('Column is full');
 				return false;
 			}
 		} else if (waterZoneCols.includes(ny)) {
 			if (
-				this.game.stagedTeamColCount(ny, this.piece.team, this) >=
-				this.game.teamMaxInWaterCol + (ignoreThisMove ? 1 : 0)
+				this.game.stagedTeamColCount(ny, this.piece.team, this.position) >=
+				this.game.teamMaxInWaterCol
 			) {
 				console.log('Column is full');
 				return false;
@@ -90,12 +89,8 @@ export class Move {
 		return true;
 	}
 
+	/** Commit this move. Will not check validity */
 	commit(): boolean {
-		// Ensure the move is still valid
-		if (!this.isValid(true)) {
-			return false;
-		}
-
 		this.game.pendingMoves = this.game.pendingMoves.filter((move) => move !== this);
 
 		this.game.board.board[this.position[0]][this.position[1]] = null;

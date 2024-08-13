@@ -58,16 +58,11 @@ export class Game {
 	 * @returns if the piece can be moved to that position
 	 */
 	stageMove(coords: [number, number], vector: [number, number]): boolean {
-		console.log('Pending move');
-
 		const move = new Move(coords, vector, this);
-
 		if (move.isValid()) {
-			console.log('Move is valid');
 			this.pendingMoves.push(move);
 			return true;
 		}
-		console.log('Move is not valid');
 		return false;
 	}
 
@@ -88,9 +83,6 @@ export class Game {
 			return;
 		}
 
-		console.log('Committing moves');
-		// Commit moves, and filter out all that succeeded
-
 		if (this.pendingMoves.some((move) => !move.isValid(true))) {
 			console.log('Some moves cannot be committed');
 			return;
@@ -101,16 +93,33 @@ export class Game {
 		this.turn++;
 	}
 
-	/** Get team pieces in a column including none committed moves */
-	stagedTeamColCount(col: number, team: Team, excludeMove: Move | null = null): number {
-		const current = this.board.teamColCount(col, team);
+	/**
+	 *
+	 * @param col col to count
+	 * @param team team co count
+	 * @param moveOriginExclude ignore moves originating from this position (usually the move being checked)
+	 * @returns number of pieces in the column from the given team
+	 */
+	stagedTeamColCount(
+		col: number,
+		team: Team,
+		moveOriginExclude: [number, number] | null = null
+	): number {
+		// rows in this column that are moving.
+		const movingRows = this.pendingMoves
+			.filter((move) => move.position[1] === col)
+			.map((move) => move.position[0]);
 
-		// Count pending moves that would affect this column
+		// Count pieces in this column, passing in the moving rows to exclude them from the count
+		const current = this.board.teamColCount(col, team, moveOriginExclude, movingRows);
+
+		// Count pending moves that would affect this column, excluding the move being checked
 		const pending = this.pendingMoves.filter(
-			(move) => move.target[1] === col && move.piece.team === team && move !== excludeMove
-		).length;
+			(move) =>
+				move.target[1] === col && move.piece.team === team && move.position !== moveOriginExclude
+		);
 
-		return current + pending;
+		return current + pending.length;
 	}
 
 	/**
