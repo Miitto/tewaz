@@ -24,9 +24,6 @@
 		border: 1px solid black;
 
 		button {
-			display: flex;
-			justify-content: center;
-			align-items: center;
 			width: 100%;
 			height: 100%;
 		}
@@ -50,6 +47,37 @@
 
 	.piece {
 		--alpha: 0.196;
+		position: relative;
+
+		&:disabled {
+			background-color: rgba(0, 0, 0, 0.5);
+			color: black;
+		}
+
+		&.moving {
+			background-color: rgba(197, 147, 39, 0.5);
+		}
+
+		.token {
+			display: block;
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			border-radius: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+
+			&.team-one {
+				background-color: #f009;
+			}
+
+			&.team-two {
+				background-color: #00f9;
+			}
+		}
 	}
 
 	.legal-move {

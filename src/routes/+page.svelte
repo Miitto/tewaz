@@ -55,19 +55,23 @@
 							class="piece"
 							class:fish={tile.piece.type == PieceType.FISH}
 							class:hunter={tile.piece.type == PieceType.HUNTER}
-							class:team-one={tile.team == Team.ONE}
-							class:team-two={tile.team == Team.TWO}
 							class:moving={tile.moving}
 							disabled={tile.moving || tile.team != game.teamTurn}
 							onclick={() => {
 								selectPiece(i, j);
 							}}
 						>
-							{#if tile.piece.type == PieceType.FISH}
-								F
-							{:else}
-								H
-							{/if}
+							<div
+								class="token"
+								class:team-one={tile.team == Team.ONE}
+								class:team-two={tile.team == Team.TWO}
+							>
+								{#if tile.piece.type == PieceType.FISH}
+									F
+								{:else}
+									H
+								{/if}
+							</div>
 						</button>
 					{:else if game.pendingMoves.some((move) => move.hasTarget([i, j]))}
 						<button
@@ -89,6 +93,7 @@
 		</div>
 	{/each}
 </div>
+<button onclick={() => game.endTurn()}>End Turn</button>
 
 <style lang="scss">
 </style>

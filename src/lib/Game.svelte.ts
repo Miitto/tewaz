@@ -83,8 +83,24 @@ export class Game {
 		return false;
 	}
 
+	/**
+	 * Remove a move from the pending moves
+	 * @param target position of the staged move target
+	 */
 	unstageMove(target: [number, number]) {
 		this.pendingMoves = this.pendingMoves.filter((move) => !move.hasTarget(target));
+	}
+
+	/**
+	 * Commit all moves and end turn
+	 */
+	endTurn() {
+		console.log('Committing moves');
+		this.pendingMoves.forEach((move) => {
+			move.commit(this.board);
+		});
+		this.pendingMoves = [];
+		this.turn++;
 	}
 
 	/**

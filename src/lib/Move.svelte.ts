@@ -52,12 +52,13 @@ export class Move {
 	}
 
 	commit(board: Board): boolean {
+		// Ensure the move is still valid
 		if (!this.isValid(board)) {
 			return false;
 		}
 
 		board.board[this.position[0]][this.position[1]] = null;
-		board.board[this.position[0] + this.target[0]][this.position[1] + this.target[1]] = this.piece;
+		board.board[this.target[0]][this.target[1]] = this.piece;
 
 		return true;
 	}
