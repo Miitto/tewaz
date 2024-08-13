@@ -4,11 +4,19 @@ import { Team } from './Piece.svelte';
 import { Tile } from './Tile.svelte';
 
 export class Game {
+	/** Max pieces per team in a sand col */
+	teamMaxInSandCol = 2;
+	/** Max pieces per team in a water col */
+	teamMaxInWaterCol = 1;
+
+	/** Move cost allowed per turn - all must be used */
 	moveAllowance = 2;
+
 	board: Board = $state(new Board());
 
 	/** Uncommitted Moves */
 	pendingMoves: Move[] = $state([]);
+
 	/** Turn number for game */
 	turn: number = $state(0);
 
@@ -51,33 +59,10 @@ export class Game {
 	 */
 	stageMove(coords: [number, number], vector: [number, number]): boolean {
 		console.log('Pending move');
-		const [x, y] = coords;
 
-		if (this.board.at(x, y) === null) {
-			console.log('No piece at position');
-			return false;
-		}
+		const move = new Move(coords, vector, this);
 
-		const piece = this.board.at(x, y);
-
-		if (!piece) {
-			console.log('No piece at position');
-			return false;
-		}
-
-		if (this.teamTurn !== piece.team) {
-			console.log('Not your turn');
-			return false;
-		}
-
-		if (this.movesUsed > this.moveAllowance - piece.moveCost) {
-			console.log('Move allowance exceeded');
-			return false;
-		}
-
-		const move = new Move(coords, vector, piece);
-
-		if (move.isValid(this.board)) {
+		if (move.isValid()) {
 			console.log('Move is valid');
 			this.pendingMoves.push(move);
 			return true;
@@ -104,11 +89,28 @@ export class Game {
 		}
 
 		console.log('Committing moves');
+		// Commit moves, and filter out all that succeeded
+
+		if (this.pendingMoves.some((move) => !move.isValid(true))) {
+			console.log('Some moves cannot be committed');
+			return;
+		}
 		this.pendingMoves.forEach((move) => {
-			move.commit(this.board);
+			move.commit();
 		});
-		this.pendingMoves = [];
 		this.turn++;
+	}
+
+	/** Get team pieces in a column including none committed moves */
+	stagedTeamColCount(col: number, team: Team, excludeMove: Move | null = null): number {
+		const current = this.board.teamColCount(col, team);
+
+		// Count pending moves that would affect this column
+		const pending = this.pendingMoves.filter(
+			(move) => move.target[1] === col && move.piece.team === team && move !== excludeMove
+		).length;
+
+		return current + pending;
 	}
 
 	/**

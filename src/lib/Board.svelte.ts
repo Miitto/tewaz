@@ -1,4 +1,9 @@
 import { Fish, Hunter, Team, type Piece } from './Piece.svelte';
+
+export const safeZoneCols = [0, 10];
+export const sandZoneCols = [4, 6];
+export const waterZoneCols = [5];
+
 export class Board {
 	board: (Piece | null)[][] = $state<Array<Array<Piece | null>>>([]);
 
@@ -25,5 +30,9 @@ export class Board {
 		}
 
 		return this.board[row][col];
+	}
+
+	teamColCount(col: number, team: Team): number {
+		return this.board.filter((row) => row[col]?.team === team).length;
 	}
 }
