@@ -12,6 +12,9 @@ export class Game {
 	/** Turn number for game */
 	turn: number = $state(0);
 
+	/** Moves left in turn */
+	movesUsed = $derived(this.pendingMoves.reduce((acc, cur) => acc + cur.piece.moveCost, 0));
+
 	/** Calculated tiles on the board */
 	tiles: Tile[][] = $derived(
 		this.board.board.map((row, i) =>
@@ -67,7 +70,7 @@ export class Game {
 			return false;
 		}
 
-		if (this.pendingMoves.reduce((acc, cur) => acc + cur.piece.moveCost, 0) >= this.moveAllowance) {
+		if (this.movesUsed > this.moveAllowance - piece.moveCost) {
 			console.log('Move allowance exceeded');
 			return false;
 		}
@@ -95,6 +98,11 @@ export class Game {
 	 * Commit all moves and end turn
 	 */
 	endTurn() {
+		if (this.movesUsed < this.moveAllowance) {
+			console.log('Not all moves used');
+			return;
+		}
+
 		console.log('Committing moves');
 		this.pendingMoves.forEach((move) => {
 			move.commit(this.board);

@@ -12,10 +12,6 @@
 	/** Moves the selected piece can make */
 	let legalMoves: [number, number][] = $derived(game.getMoves(selectedPiece));
 
-	let movesLeft = $derived(
-		game.moveAllowance - game.pendingMoves.reduce((acc, move) => acc + move.piece.moveCost, 0)
-	);
-
 	function selectPiece(i: number, j: number) {
 		if (selectedPiece && selectedPiece[0] === i && selectedPiece[1] === j) {
 			selectedPiece = null;
@@ -94,6 +90,7 @@
 	{/each}
 </div>
 <button onclick={() => game.endTurn()}>End Turn</button>
+<p>Moves left: {game.moveAllowance - game.movesUsed}</p>
 
 <style lang="scss">
 </style>
