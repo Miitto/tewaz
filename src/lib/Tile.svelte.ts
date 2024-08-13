@@ -1,4 +1,4 @@
-import type { Piece } from "./Piece.svelte";
+import type { Piece } from './Piece.svelte';
 
 export const enum Terrain {
 	SAFE,
@@ -10,15 +10,17 @@ export const enum Terrain {
 export class Tile {
 	committed = false;
 	piece: Piece | null = null;
+
+	/** Original position of the piece */
 	moving = false;
+	/** Pending position of the piece */
 	movingTo = false;
+
 	danger = false;
 	type: Terrain;
 
 	constructor(piece: Piece | null, coords: [number, number]) {
 		this.piece = piece;
-		console.log("Tile is of piece: ", piece?.type);
-
 		const y = coords[1];
 
 		if (y == 0 || y == 10) {
@@ -35,13 +37,17 @@ export class Tile {
 	getClass() {
 		switch (this.type) {
 			case Terrain.SAFE:
-				return "safe";
+				return 'safe';
 			case Terrain.SAND:
-				return "sand";
+				return 'sand';
 			case Terrain.WATER:
-				return "water";
+				return 'water';
 			default:
-				return "";
+				return '';
 		}
+	}
+
+	get team() {
+		return this.piece?.team;
 	}
 }

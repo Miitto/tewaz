@@ -1,11 +1,10 @@
 import { Fish, Hunter, Team, type Piece } from './Piece.svelte';
 export class Board {
-	board: (Piece | null)[][];
+	board: (Piece | null)[][] = $state<Array<Array<Piece | null>>>([]);
 
 	constructor(copy?: Board) {
 		if (copy) {
-			this.board = copy.board.map(row => row.slice());
-			console.log("copy");
+			this.board = copy.board.map((row) => row.slice());
 		} else {
 			// make a 5x11 board with pieces in end columns
 			this.board = Array.from({ length: 5 }, () => Array.from({ length: 11 }, () => null));
@@ -16,7 +15,7 @@ export class Board {
 		}
 	}
 
-	at(row: ([number, number] | number), col: number | undefined = undefined): Piece | null {
+	at(row: [number, number] | number, col: number | undefined = undefined): Piece | null {
 		if (Array.isArray(row)) {
 			[row, col] = row;
 		}

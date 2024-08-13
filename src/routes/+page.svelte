@@ -1,65 +1,94 @@
 <script lang="ts">
 	import { Game } from '$lib/Game.svelte';
+	import '$lib/styles/board.scss';
 	import { Fish, Hunter, PieceType, Team } from '$lib/Piece.svelte';
 	import { Terrain } from '$lib/Tile.svelte';
 
 	let game = new Game();
+
+	/** Piece selected by the user */
 	let selectedPiece: [number, number] | null = $state(null);
+
+	/** Moves the selected piece can make */
 	let legalMoves: [number, number][] = $derived(game.getMoves(selectedPiece));
-</script>
 
-{#each game.board.board as row, i}
-	<div class="row">
-		{#each row as cell, j}
-			{@const tile = game.getTile(i, j)}
-			<div class={`cell ${tile.getClass()}`}>
-				{#if tile.piece !== null}
-					<button
-						class:fish={tile.piece.type == PieceType.FISH}
-						class:hunter={tile.piece.type == PieceType.HUNTER}
-						onclick={() => {
-							selectedPiece = [i, j];
-						}}
-					>
-						{#if tile.piece.type == PieceType.FISH}
-							F
-						{:else}
-							H
-						{/if}
-					</button>
-				{/if}
-			</div>
-		{/each}
-	</div>
-{/each}
+	let movesLeft = $derived(
+		game.moveAllowance - game.pendingMoves.reduce((acc, move) => acc + move.piece.moveCost, 0)
+	);
 
-<style lang="scss">
-	.row {
-		display: flex;
-	}
-	.cell {
-		width: 50px;
-		height: 50px;
-		border: 1px solid black;
-
-		button {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			width: 100%;
-			height: 100%;
+	function selectPiece(i: number, j: number) {
+		if (selectedPiece && selectedPiece[0] === i && selectedPiece[1] === j) {
+			selectedPiece = null;
+		} else {
+			selectedPiece = [i, j];
 		}
 	}
 
-	.safe {
-		background-color: #44ff4455;
+	function pendMove(i: number, j: number) {
+		console.log('Pend move', selectedPiece, [i, j]);
+		if (selectedPiece) {
+			game.stageMove(selectedPiece, [i, j]);
+			selectedPiece = null;
+		}
 	}
 
-	.sand {
-		background-color: #ffff5555;
-	}
+	$effect(() => {
+		console.log(game.pendingMoves);
+	});
+</script>
 
-	.water {
-		background-color: #7777ff55;
-	}
+<div
+	class="board"
+	class:turn-one={game.teamTurn == Team.ONE}
+	class:turn-two={game.teamTurn == Team.TWO}
+>
+	{#each game.tiles as row, i}
+		<div class="row">
+			{#each row as tile, j}
+				<div
+					class={`cell ${tile.getClass()}`}
+					class:legal-move={legalMoves.some(([x, y]) => x == i && y == j)}
+					class:selected={selectedPiece && selectedPiece[0] === i && selectedPiece[1] === j}
+				>
+					{#if tile.piece !== null}
+						<button
+							class="piece"
+							class:fish={tile.piece.type == PieceType.FISH}
+							class:hunter={tile.piece.type == PieceType.HUNTER}
+							class:team-one={tile.team == Team.ONE}
+							class:team-two={tile.team == Team.TWO}
+							class:moving={tile.moving}
+							disabled={tile.moving || tile.team != game.teamTurn}
+							onclick={() => {
+								selectPiece(i, j);
+							}}
+						>
+							{#if tile.piece.type == PieceType.FISH}
+								F
+							{:else}
+								H
+							{/if}
+						</button>
+					{:else if game.pendingMoves.some((move) => move.hasTarget([i, j]))}
+						<button
+							disabled={selectedPiece != null}
+							class="moving-to"
+							onclick={() => game.unstageMove([i, j])}
+						></button>
+					{:else if legalMoves.some(([x, y]) => x == i && y == j)}
+						<button
+							class="legal-move-btn"
+							onclick={() => {
+								pendMove(i, j);
+							}}
+						>
+						</button>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	{/each}
+</div>
+
+<style lang="scss">
 </style>

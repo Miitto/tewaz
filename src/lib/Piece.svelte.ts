@@ -14,7 +14,7 @@ export interface Piece {
 	get type(): PieceType;
 	instanceNo: number;
 	getMoveOffsets(): [number, number][];
-	getMoveCost(): number;
+	moveCost: number;
 }
 
 export class Fish implements Piece {
@@ -35,10 +35,27 @@ export class Fish implements Piece {
 	}
 
 	getMoveOffsets(): [number, number][] {
-		return [[1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0], [0, 2], [0, -2], [1, 1], [-1, 1], [1, -1], [-1, -1], [2, 2], [-2, 2], [2, -2], [-2, -2]]
+		return [
+			[1, 0],
+			[-1, 0],
+			[0, 1],
+			[0, -1],
+			[2, 0],
+			[-2, 0],
+			[0, 2],
+			[0, -2],
+			[1, 1],
+			[-1, 1],
+			[1, -1],
+			[-1, -1],
+			[2, 2],
+			[-2, 2],
+			[2, -2],
+			[-2, -2]
+		];
 	}
 
-	getMoveCost(): number {
+	get moveCost(): number {
 		return 1;
 	}
 }
@@ -59,9 +76,18 @@ export class Hunter implements Piece {
 		return this.t;
 	}
 	getMoveOffsets(): [number, number][] {
-		return [[1, 1], [-1, 1], [1, -1], [-1, -1]];
+		return [
+			[1, 1],
+			[-1, 1],
+			[1, -1],
+			[-1, -1],
+			[0, 1],
+			[1, 0],
+			[0, -1],
+			[-1, 0]
+		];
 	}
-	getMoveCost(): number {
+	get moveCost(): number {
 		return 2;
 	}
 }
