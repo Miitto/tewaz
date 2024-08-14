@@ -162,29 +162,10 @@ export class Game {
 					const [dx, dy] = offset;
 					return [row + dx, col + dy];
 				})
-				// Filter out moves that are out of bounds
+				// Create a move object to check if the move is valid TODO: Maybe make this static so you don't need to create a move object?
 				.filter(([x, y]) => {
-					return x >= 0 && x < 5 && y >= 0 && y < 11;
-				})
-				// Filter out moves that would result in a collision
-				.filter(([x, y]) => {
-					return this.board.at(x, y) === null;
-				})
-				// Filter out moves that would collide with a pending move
-				.filter(([x, y]) => {
-					return !this.pendingMoves.some((move) => move.target[0] === x && move.target[1] === y);
-				})
-				// Check you can't hop over pieces
-				.filter(([x, y]) => {
-					while (x !== row && y !== col) {
-						if (this.board.at(x, y) !== null) {
-							return false;
-						}
-
-						x -= x > row ? 1 : x < row ? -1 : 0;
-						y -= y > col ? 1 : y < col ? -1 : 0;
-					}
-					return true;
+					const move = new Move([row, col], [x, y], this);
+					return move.isValid();
 				}) as [number, number][]) ?? []
 		);
 	}

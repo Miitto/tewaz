@@ -30,7 +30,7 @@ export class Move {
 	isValid(skipMoveCost = false): boolean {
 		const board = this.game.board;
 		const [x, y] = this.position;
-		let [nx, ny] = this.target;
+		const [nx, ny] = this.target;
 
 		const dx = nx - x;
 		const dy = ny - y;
@@ -76,15 +76,29 @@ export class Move {
 			}
 		}
 
+		let xOffset = nx;
+		let yOffset = ny;
+
+		console.log('Offsets', xOffset, yOffset, x, y, dx, dy);
+
+		// FIXME: I managed to hop over a piece, cannot seem to reproduce
+
 		// Ensure it isn't hopping over pieces
-		while (nx !== x && ny !== y) {
-			if (board.board[nx][ny] !== null) {
+		while (xOffset !== x || yOffset !== y) {
+			console.log('Checking', xOffset, yOffset, board.at([xOffset, yOffset]));
+			if (board.board[xOffset][yOffset] !== null) {
+				console.log('Piece in the way at', xOffset, yOffset);
 				return false;
 			}
 
-			nx -= dx > 0 ? 1 : dx < 0 ? -1 : 0;
-			ny -= dy > 0 ? 1 : dy < 0 ? -1 : 0;
+			if (dx != 0 && xOffset !== x) {
+				xOffset -= dx > 0 ? 1 : -1;
+			}
+			if (dy != 0 && yOffset !== y) {
+				yOffset -= dy > 0 ? 1 : -1;
+			}
 		}
+		console.log('No pieces in the way');
 
 		return true;
 	}
