@@ -9,7 +9,7 @@ export const boardWidth = 11;
 export const boardHeight = 5;
 
 export class Board {
-	board: (Piece | null)[][] = $state<Array<Array<Piece | null>>>([]);
+	board: (Piece | null)[][];
 
 	constructor(copy?: Board) {
 		if (copy) {

@@ -48,11 +48,15 @@
 					class:selected={selectedPiece && selectedPiece.x === i && selectedPiece.y === j}
 				>
 					{#if tile.piece !== null}
+						{@const atRisk = game.pendingMoves.some((move) =>
+							move.willCaptureCoords().some(([x, y]) => x == i && y == j)
+						)}
 						<button
 							class="piece"
 							class:fish={tile.piece.type == PieceType.FISH}
 							class:hunter={tile.piece.type == PieceType.HUNTER}
 							class:moving={tile.moving}
+							class:danger={atRisk}
 							disabled={tile.moving || tile.team != game.teamTurn}
 							onclick={() => {
 								selectPiece(i, j);

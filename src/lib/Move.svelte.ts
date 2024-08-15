@@ -1,4 +1,4 @@
-import { boardWidth, sandZoneCols, waterZoneCols } from './Board.svelte';
+import { Board, boardWidth, sandZoneCols, waterZoneCols } from './Board.svelte';
 import { Coord, type Point } from './Coord';
 import type { Game } from './Game.svelte';
 import { Team, type Piece } from './Piece.svelte';
@@ -95,15 +95,19 @@ export class Move {
 	}
 
 	/** Commit this move. Will not check validity */
-	commit(): boolean {
-		this.game.pendingMoves = this.game.pendingMoves.filter((move) => move !== this);
+	commit(board?: Board, removeMove: boolean = true): boolean {
+		if (!board) {
+			board = this.game.board;
+		}
 
-		this.game.board.board[this.position.x][this.position.y] = null;
+		if (removeMove) this.game.pendingMoves = this.game.pendingMoves.filter((move) => move !== this);
+
+		board.board[this.position.x][this.position.y] = null;
 
 		// Piece should be deleted if there is no target
 		if (!this.discard) {
-			if (this.game.board.board[this.target.x][this.target.y] === null) {
-				this.game.board.board[this.target.x][this.target.y] = this.piece;
+			if (board.board[this.target.x][this.target.y] === null) {
+				board.board[this.target.x][this.target.y] = this.piece;
 			} else {
 				console.log('Piece lost', this.piece);
 			}
@@ -146,5 +150,16 @@ export class Move {
 		console.log('Capturing', this.target);
 		this.piece.flip();
 		this.sendHome();
+	}
+
+	willCaptureCoords(): Coord[] {
+		const board = new Board(this.game.board); // Copy board
+
+		// Apply all pending moves to new board
+		this.game.pendingMoves.forEach((move) => {
+			move.commit(board, false);
+		});
+
+		return board.getDangerousPositions();
 	}
 }

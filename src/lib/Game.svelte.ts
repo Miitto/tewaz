@@ -175,15 +175,18 @@ export class Game {
 			throw new Error('Invalid arguments');
 		}
 
+		// Apply all pending moves to a new board so we get up to date information
+		const board = new Board(this.board);
+		this.pendingMoves.forEach((move) => move.commit(board, false));
+
 		return (
-			(this.board
+			(board
 				.at(row, col)
 				?.moveOffsets // Map offsets to coordinates
 				.map((offset) => {
 					const [dx, dy] = offset;
 					return new Move(new Coord(row, col), new Coord(row + dx, col + dy), this);
 				})
-				// Create a move object to check if the move is valid TODO: Maybe make this static so you don't need to create a move object?
 				.filter((move) => move.isValid()) as Move[]) ?? []
 		);
 	}
