@@ -101,4 +101,8 @@
 		// Darken scaling with alpha
 		filter: brightness(calc(1 - (var(--alpha, 0) - 0.1)));
 	}
+
+	.danger {
+		border: 2px solid red;
+	}
 }

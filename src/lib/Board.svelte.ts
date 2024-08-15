@@ -1,3 +1,4 @@
+import { Coord } from './Coord';
 import { Fish, Hunter, Team, type Piece } from './Piece.svelte';
 
 export const safeZoneCols = [0, 10];
@@ -20,8 +21,12 @@ export class Board {
 		}
 	}
 
-	at(row: [number, number] | number, col: number | undefined = undefined): Piece | null {
+	at(row: Coord | [number, number] | number, col?: number): Piece | null {
 		if (Array.isArray(row)) {
+			[row, col] = row;
+		}
+
+		if (row instanceof Coord) {
 			[row, col] = row;
 		}
 
@@ -43,14 +48,55 @@ export class Board {
 	teamColCount(
 		col: number,
 		team: Team,
-		moveOriginExclude: [number, number] | null = null,
+		moveOriginExclude: Coord | null = null,
 		rowExcludes: number[] | null = null
 	): number {
 		return this.board.filter(
 			(row, i) =>
 				(!rowExcludes || !rowExcludes.includes(i)) &&
 				row[col]?.team === team &&
-				(!moveOriginExclude || (i != moveOriginExclude[0] && col != moveOriginExclude[1]))
+				(!moveOriginExclude || (i != moveOriginExclude.x && col != moveOriginExclude.y))
 		).length;
+	}
+
+	posIsDangerous(pos: Coord, team: Team): boolean {
+		const [x, y] = pos;
+
+		return this.board.some((row, i) => {
+			return row.some((piece, j) => {
+				if (!piece) {
+					return false;
+				}
+				if (piece?.team === team) {
+					return false;
+				}
+				return piece?.captureOffsets.some(([dx, dy]) => {
+					if (i + dx !== x || j + dy !== y) {
+						return false;
+					}
+
+					console.log('checking', i + dx, j + dy);
+
+					if (piece.captureNeedsMirror) {
+						const mirroredPiece = this.at([i + dx * 2, j + dy * 2]);
+						if (!mirroredPiece) {
+							return false;
+						}
+						console.log('mirrored', mirroredPiece);
+						if (mirroredPiece.team !== piece.team) {
+							console.log('not same team');
+							return false;
+						}
+						if (mirroredPiece.captureMirrorSameType && mirroredPiece.type !== piece.type) {
+							console.log('not same type');
+							return false;
+						}
+						return true;
+					} else {
+						return true;
+					}
+				});
+			});
+		});
 	}
 }

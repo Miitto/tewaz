@@ -1,4 +1,5 @@
 import { Board } from './Board.svelte';
+import { Coord } from './Coord';
 import { Move } from './Move.svelte';
 import { Team } from './Piece.svelte';
 import { Tile } from './Tile.svelte';
@@ -30,12 +31,12 @@ export class Game {
 				const tile = new Tile(this.board.at(i, j), [i, j]);
 
 				// Check if the tile is moving
-				if (this.pendingMoves.some((m) => m.position[0] == i && m.position[1] == j)) {
+				if (this.pendingMoves.some((m) => m.position.x == i && m.position.y == j)) {
 					tile.moving = true;
 				}
 
 				// Check if a tile has been moved here
-				if (this.pendingMoves.some((m) => m.target[0] == i && m.target[1] == j)) {
+				if (this.pendingMoves.some((m) => m.target.x == i && m.target.y == j)) {
 					tile.movingTo = true;
 				}
 
@@ -57,7 +58,7 @@ export class Game {
 	 * @param vector offset to move the piece by
 	 * @returns if the piece can be moved to that position
 	 */
-	stageMove(coords: [number, number], vector: [number, number]): boolean {
+	stageMove(coords: Coord, vector: Coord): boolean {
 		const move = new Move(coords, vector, this);
 		if (move.isValid()) {
 			this.pendingMoves.push(move);
@@ -70,26 +71,37 @@ export class Game {
 	 * Remove a move from the pending moves
 	 * @param target position of the staged move target
 	 */
-	unstageMove(target: [number, number]) {
+	unstageMove(target: Coord) {
 		this.pendingMoves = this.pendingMoves.filter((move) => !move.hasTarget(target));
 	}
 
 	/**
-	 * Commit all moves and end turn
+	 * Attempt to commit all staged moves
+	 * @returns if all moves have been committed
 	 */
-	endTurn() {
+	commitStagedMoves(): boolean {
 		if (this.movesUsed < this.moveAllowance) {
 			console.log('Not all moves used');
-			return;
+			return false;
 		}
 
 		if (this.pendingMoves.some((move) => !move.isValid(true))) {
 			console.log('Some moves cannot be committed');
-			return;
+			return false;
 		}
 		this.pendingMoves.forEach((move) => {
 			move.commit();
 		});
+		return true;
+	}
+
+	/**
+	 * Process the end of a turn. Commit moves, capture pieces, increment turn number
+	 */
+	endTurn() {
+		if (!this.commitStagedMoves()) {
+			return;
+		}
 		this.turn++;
 	}
 
@@ -100,15 +112,11 @@ export class Game {
 	 * @param moveOriginExclude ignore moves originating from this position (usually the move being checked)
 	 * @returns number of pieces in the column from the given team
 	 */
-	stagedTeamColCount(
-		col: number,
-		team: Team,
-		moveOriginExclude: [number, number] | null = null
-	): number {
+	stagedTeamColCount(col: number, team: Team, moveOriginExclude: Coord | null = null): number {
 		// rows in this column that are moving.
 		const movingRows = this.pendingMoves
-			.filter((move) => move.position[1] === col)
-			.map((move) => move.position[0]);
+			.filter((move) => move.position.y === col)
+			.map((move) => move.position.x);
 
 		// Count pieces in this column, passing in the moving rows to exclude them from the count
 		const current = this.board.teamColCount(col, team, moveOriginExclude, movingRows);
@@ -116,7 +124,7 @@ export class Game {
 		// Count pending moves that would affect this column, excluding the move being checked
 		const pending = this.pendingMoves.filter(
 			(move) =>
-				move.target[1] === col && move.piece.team === team && move.position !== moveOriginExclude
+				move.target.y === col && move.piece.team === team && move.position !== moveOriginExclude
 		);
 
 		return current + pending.length;
@@ -138,35 +146,27 @@ export class Game {
 	 * @param col column of piece to check
 	 * @returns all valid moves that piece can make
 	 */
-	getMoves(row: number | [number, number] | null, col: number | null = null): [number, number][] {
-		// Allow for both getMoves(row, col) and getMoves([row, col]). If row is null, return an empty array.
-		if (Array.isArray(row)) {
-			[row, col] = row;
-		}
-
-		if (row === null) {
+	getMoves(pos: Coord | null): Move[] {
+		if (!pos) {
 			return [];
 		}
+		const [row, col] = pos;
 
 		// If col is still null, then row was a number or invalid array and col was not provided
-		if (col === null) {
+		if (col === null || col === undefined) {
 			throw new Error('Invalid arguments');
 		}
 
 		return (
 			(this.board
 				.at(row, col)
-				?.getMoveOffsets()
-				// Map offsets to coordinates
+				?.moveOffsets // Map offsets to coordinates
 				.map((offset) => {
 					const [dx, dy] = offset;
-					return [row + dx, col + dy];
+					return new Move(new Coord(row, col), new Coord(row + dx, col + dy), this);
 				})
 				// Create a move object to check if the move is valid TODO: Maybe make this static so you don't need to create a move object?
-				.filter(([x, y]) => {
-					const move = new Move([row, col], [x, y], this);
-					return move.isValid();
-				}) as [number, number][]) ?? []
+				.filter((move) => move.isValid()) as Move[]) ?? []
 		);
 	}
 }

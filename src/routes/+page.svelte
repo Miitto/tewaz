@@ -3,29 +3,35 @@
 	import '$lib/styles/board.scss';
 	import { Fish, Hunter, PieceType, Team } from '$lib/Piece.svelte';
 	import { Terrain } from '$lib/Tile.svelte';
+	import type { Move } from '$lib/Move.svelte';
+	import { Coord } from '$lib/Coord';
 
 	let game = new Game();
 
 	/** Piece selected by the user */
-	let selectedPiece: [number, number] | null = $state(null);
+	let selectedPiece: Coord | null = $state(null);
 
 	/** Moves the selected piece can make */
-	let legalMoves: [number, number][] = $derived(game.getMoves(selectedPiece));
+	let legalMoves: Move[] = $derived(game.getMoves(selectedPiece));
 
 	function selectPiece(i: number, j: number) {
-		if (selectedPiece && selectedPiece[0] === i && selectedPiece[1] === j) {
+		if (selectedPiece && selectedPiece.x === i && selectedPiece.y === j) {
 			selectedPiece = null;
 		} else {
-			selectedPiece = [i, j];
+			selectedPiece = new Coord(i, j);
 		}
 	}
 
 	function pendMove(i: number, j: number) {
 		if (selectedPiece) {
-			game.stageMove(selectedPiece, [i, j]);
+			game.stageMove(selectedPiece, new Coord(i, j));
 			selectedPiece = null;
 		}
 	}
+
+	// $effect(() => {
+	// 	console.log(legalMoves);
+	// });
 </script>
 
 <div
@@ -38,8 +44,8 @@
 			{#each row as tile, j}
 				<div
 					class={`cell ${tile.getClass()}`}
-					class:legal-move={legalMoves.some(([x, y]) => x == i && y == j)}
-					class:selected={selectedPiece && selectedPiece[0] === i && selectedPiece[1] === j}
+					class:legal-move={legalMoves.some((move) => move.target.x == i && move.target.y == j)}
+					class:selected={selectedPiece && selectedPiece.x === i && selectedPiece.y === j}
 				>
 					{#if tile.piece !== null}
 						<button
@@ -68,11 +74,13 @@
 						<button
 							disabled={selectedPiece != null}
 							class="moving-to"
-							onclick={() => game.unstageMove([i, j])}
+							onclick={() => game.unstageMove(new Coord(i, j))}
 						></button>
-					{:else if legalMoves.some(([x, y]) => x == i && y == j)}
+					{:else if legalMoves.some((move) => move.target.x == i && move.target.y == j)}
+						{@const move = legalMoves.find((move) => move.target.x == i && move.target.y == j)}
 						<button
 							class="legal-move-btn"
+							class:danger={move?.isDangerous()}
 							onclick={() => {
 								pendMove(i, j);
 							}}

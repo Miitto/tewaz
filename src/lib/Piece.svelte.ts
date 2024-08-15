@@ -13,8 +13,11 @@ export interface Piece {
 
 	get type(): PieceType;
 	instanceNo: number;
-	getMoveOffsets(): [number, number][];
-	moveCost: number;
+	moveOffsets: [number, number][];
+	get moveCost(): number;
+	get captureOffsets(): [number, number][];
+	get captureNeedsMirror(): boolean;
+	get captureMirrorSameType(): boolean;
 }
 
 export class Fish implements Piece {
@@ -34,7 +37,7 @@ export class Fish implements Piece {
 		return this.t;
 	}
 
-	getMoveOffsets(): [number, number][] {
+	get moveOffsets(): [number, number][] {
 		return [
 			[1, 0],
 			[-1, 0],
@@ -53,6 +56,24 @@ export class Fish implements Piece {
 			[2, -2],
 			[-2, -2]
 		];
+	}
+
+	get captureOffsets(): [number, number][] {
+		// Straight lines
+		return [
+			[1, 0],
+			[-1, 0],
+			[0, 1],
+			[0, -1]
+		];
+	}
+
+	get captureNeedsMirror(): boolean {
+		return true;
+	}
+
+	get captureMirrorSameType(): boolean {
+		return true;
 	}
 
 	get moveCost(): number {
@@ -75,7 +96,7 @@ export class Hunter implements Piece {
 	get type(): PieceType {
 		return this.t;
 	}
-	getMoveOffsets(): [number, number][] {
+	get moveOffsets(): [number, number][] {
 		return [
 			[1, 1],
 			[-1, 1],
@@ -87,6 +108,29 @@ export class Hunter implements Piece {
 			[-1, 0]
 		];
 	}
+
+	get captureOffsets(): [number, number][] {
+		// All directions
+		return [
+			[1, 1],
+			[-1, 1],
+			[1, -1],
+			[-1, -1],
+			[0, 1],
+			[1, 0],
+			[0, -1],
+			[-1, 0]
+		];
+	}
+
+	get captureNeedsMirror(): boolean {
+		return false;
+	}
+
+	get captureMirrorSameType(): boolean {
+		return false;
+	}
+
 	get moveCost(): number {
 		return 2;
 	}

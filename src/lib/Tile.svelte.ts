@@ -20,7 +20,7 @@ export class Tile {
 	danger = false;
 	type: Terrain;
 
-	constructor(piece: Piece | null, coords: [number, number]) {
+	constructor(piece: Piece | null, coords: Coord) {
 		this.piece = piece;
 		const y = coords[1];
 
