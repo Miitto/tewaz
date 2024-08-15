@@ -1,13 +1,14 @@
 import { sandZoneCols, waterZoneCols } from './Board.svelte';
 import { Coord } from './Coord';
 import type { Game } from './Game.svelte';
-import type { Piece } from './Piece.svelte';
+import { Team, type Piece } from './Piece.svelte';
 
 export class Move {
 	position: Coord;
 	target: Coord;
 	piece: Piece;
 	game: Game;
+	private discard = false;
 
 	constructor(position: Coord, target: Coord, game: Game) {
 		this.position = position;
@@ -98,12 +99,32 @@ export class Move {
 		this.game.pendingMoves = this.game.pendingMoves.filter((move) => move !== this);
 
 		this.game.board.board[this.position.x][this.position.y] = null;
-		this.game.board.board[this.target.x][this.target.y] = this.piece;
+
+		// Piece should be deleted if there is no target
+		if (!this.discard) {
+			this.game.board.board[this.target.x][this.target.y] = this.piece;
+		}
 
 		return true;
 	}
 
 	isDangerous(): boolean {
 		return this.game.board.posIsDangerous(this.target, this.piece.team);
+	}
+
+	sendHome() {
+		const safeCol = this.piece.team === Team.ONE ? 0 : this.game.board.board[0].length - 1;
+		// Find empty safe col slot
+		const row = this.game.board.board.findIndex((row) => row[safeCol] === null);
+
+		// No safe spot TODO: Needs balancing. Currently discards piece, should maybe store it for next turn?
+		if (row === -1) {
+			console.log('No space in Safe Zone, piece lost');
+			this.discard = true;
+		} else {
+			this.target.x = row;
+			this.target.y = safeCol;
+		}
+		this.commit();
 	}
 }

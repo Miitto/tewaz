@@ -80,11 +80,6 @@ export class Game {
 	 * @returns if all moves have been committed
 	 */
 	commitStagedMoves(): boolean {
-		if (this.movesUsed < this.moveAllowance) {
-			console.log('Not all moves used');
-			return false;
-		}
-
 		if (this.pendingMoves.some((move) => !move.isValid(true))) {
 			console.log('Some moves cannot be committed');
 			return false;
@@ -99,6 +94,19 @@ export class Game {
 	 * Process the end of a turn. Commit moves, capture pieces, increment turn number
 	 */
 	endTurn() {
+		// This needs to be before any pieces are taken, otherwise the moves used will be incorrect
+		if (this.movesUsed < this.moveAllowance) {
+			console.log('Not all moves used');
+			return false;
+		}
+
+		const dangerousMoves = this.pendingMoves.filter((move) => move.isDangerous());
+
+		dangerousMoves.map((move) => {
+			move.piece.flip();
+			move.sendHome();
+		});
+
 		if (!this.commitStagedMoves()) {
 			return;
 		}

@@ -18,6 +18,7 @@ export interface Piece {
 	get captureOffsets(): [number, number][];
 	get captureNeedsMirror(): boolean;
 	get captureMirrorSameType(): boolean;
+	flip(): void;
 }
 
 export class Fish implements Piece {
@@ -79,6 +80,10 @@ export class Fish implements Piece {
 	get moveCost(): number {
 		return 1;
 	}
+
+	flip() {
+		this.team = this.team === Team.ONE ? Team.TWO : Team.ONE;
+	}
 }
 
 export class Hunter implements Piece {
@@ -133,5 +138,9 @@ export class Hunter implements Piece {
 
 	get moveCost(): number {
 		return 2;
+	}
+
+	flip() {
+		this.team = this.team === Team.ONE ? Team.TWO : Team.ONE;
 	}
 }
