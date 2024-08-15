@@ -1,5 +1,5 @@
-import { sandZoneCols, waterZoneCols } from './Board.svelte';
-import { Coord } from './Coord';
+import { boardWidth, sandZoneCols, waterZoneCols } from './Board.svelte';
+import { Coord, type Point } from './Coord';
 import type { Game } from './Game.svelte';
 import { Team, type Piece } from './Piece.svelte';
 
@@ -21,11 +21,11 @@ export class Move {
 		this.game = game;
 	}
 
-	hasTarget(target: Coord | [number, number]): boolean {
+	hasTarget(target: Point): boolean {
 		return this.target.equals(target);
 	}
 
-	hasPosition(position: Coord | [number, number]): boolean {
+	hasPosition(position: Point): boolean {
 		return this.position.equals(position);
 	}
 
@@ -102,29 +102,49 @@ export class Move {
 
 		// Piece should be deleted if there is no target
 		if (!this.discard) {
-			this.game.board.board[this.target.x][this.target.y] = this.piece;
+			if (this.game.board.board[this.target.x][this.target.y] === null) {
+				this.game.board.board[this.target.x][this.target.y] = this.piece;
+			} else {
+				console.log('Piece lost', this.piece);
+			}
 		}
 
 		return true;
 	}
 
 	isDangerous(): boolean {
-		return this.game.board.posIsDangerous(this.target, this.piece.team);
+		return this.game.board.posIsDangerous(this.target);
+	}
+
+	static findHomePositions(game: Game, team: Team): Coord[] {
+		const safeCol = team === Team.ONE ? 0 : boardWidth - 1;
+
+		// Find empty safe col slot
+		const rows = game.board.board
+			.map((row, i) => i)
+			.filter((i) => game.board.board[i][safeCol] === null);
+
+		return rows.map((row) => new Coord(row, safeCol));
 	}
 
 	sendHome() {
-		const safeCol = this.piece.team === Team.ONE ? 0 : this.game.board.board[0].length - 1;
-		// Find empty safe col slot
-		const row = this.game.board.board.findIndex((row) => row[safeCol] === null);
+		const safeSpots = Move.findHomePositions(this.game, this.piece.team);
 
 		// No safe spot TODO: Needs balancing. Currently discards piece, should maybe store it for next turn?
-		if (row === -1) {
+		if (safeSpots.length == 0) {
 			console.log('No space in Safe Zone, piece lost');
 			this.discard = true;
 		} else {
-			this.target.x = row;
-			this.target.y = safeCol;
+			// TODO: Choose where to put the piece
+			this.target = safeSpots[0];
+			console.log('Sending home', this.target);
 		}
 		this.commit();
+	}
+
+	capture() {
+		console.log('Capturing', this.target);
+		this.piece.flip();
+		this.sendHome();
 	}
 }

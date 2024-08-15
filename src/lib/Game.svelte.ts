@@ -28,7 +28,7 @@ export class Game {
 	tiles: Tile[][] = $derived(
 		this.board.board.map((row, i) =>
 			row.map((col, j) => {
-				const tile = new Tile(this.board.at(i, j), [i, j]);
+				const tile = new Tile(this.board.at(i, j), new Coord(i, j));
 
 				// Check if the tile is moving
 				if (this.pendingMoves.some((m) => m.position.x == i && m.position.y == j)) {
@@ -110,6 +110,16 @@ export class Game {
 		if (!this.commitStagedMoves()) {
 			return;
 		}
+
+		// Find pieces to capture
+		this.board.getDangerousPositions().forEach((pos) => {
+			console.log('Capturing', pos);
+			const piece = this.board.at(pos);
+			if (piece) {
+				new Move(pos, pos, this).capture();
+			}
+		});
+
 		this.turn++;
 	}
 

@@ -1,4 +1,5 @@
 import { safeZoneCols, sandZoneCols, waterZoneCols } from './Board.svelte';
+import type { Coord } from './Coord';
 import type { Piece } from './Piece.svelte';
 
 export const enum Terrain {
@@ -22,7 +23,7 @@ export class Tile {
 
 	constructor(piece: Piece | null, coords: Coord) {
 		this.piece = piece;
-		const y = coords[1];
+		const y = coords.y;
 
 		if (safeZoneCols.includes(y)) {
 			this.type = Terrain.SAFE;

@@ -1,3 +1,5 @@
+export type Point = Coord | [number, number];
+
 export class Coord {
 	x: number;
 	y: number;
@@ -19,7 +21,7 @@ export class Coord {
 		return `(${this.x}, ${this.y})`;
 	}
 
-	equals(other: Coord | [number, number]): boolean {
+	equals(other: Point): boolean {
 		let row: number;
 		let col: number;
 		if (Array.isArray(other)) {
