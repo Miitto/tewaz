@@ -1,9 +1,16 @@
 import { Board } from './Board.svelte';
-import { Coord } from './Coord';
+import { Coord, type Point } from './Coord';
 import { Move } from './Move.svelte';
 import { Team } from './Piece.svelte';
 import { Tile } from './Tile.svelte';
 
+// TODO: hold game config such as move allowance, team piece limits, etc in a new object - so they can be configured in the game
+
+/**
+ * Local game state
+ * Includes current board state, pending moves, and turn information
+ * Will hold game configuration and rules
+ */
 export class Game {
 	/** Max pieces per team in a sand col */
 	teamMaxInSandCol = 2;
@@ -19,10 +26,12 @@ export class Game {
 	pendingMoves: Move[] = $state([]);
 
 	/** Turn number for game */
-	turn: number = $state(0);
+	turn: number = 0;
 
 	/** Moves left in turn */
-	movesUsed = $derived(this.pendingMoves.reduce((acc, cur) => acc + cur.piece.moveCost, 0));
+	get movesUsed() {
+		return this.pendingMoves.reduce((acc, cur) => acc + cur.piece.moveCost, 0);
+	}
 
 	/** Calculated tiles on the board */
 	tiles: Tile[][] = $derived(
@@ -46,7 +55,9 @@ export class Game {
 	);
 
 	/** Team whose turn it is */
-	teamTurn = $derived(this.turn % 2 === 0 ? Team.ONE : Team.TWO);
+	get teamTurn() {
+		return this.turn % 2 === 0 ? Team.ONE : Team.TWO;
+	}
 
 	constructor() {
 		this.turn = 0;
@@ -55,12 +66,12 @@ export class Game {
 	/**
 	 * Pend a move to be committed later
 	 * @param coords position of the piece to move
-	 * @param vector offset to move the piece by
+	 * @param target target position to move the piece to
 	 * @returns if the piece can be moved to that position
 	 */
-	stageMove(coords: Coord, vector: Coord): boolean {
-		const move = new Move(coords, vector, this);
-		if (move.isValid()) {
+	stageMove(coords: Point, target: Point, logFailure: boolean = false): boolean {
+		const move = new Move(coords, target, this);
+		if (move.isValid(false, logFailure)) {
 			this.pendingMoves.push(move);
 			return true;
 		}
@@ -71,7 +82,7 @@ export class Game {
 	 * Remove a move from the pending moves
 	 * @param target position of the staged move target
 	 */
-	unstageMove(target: Coord) {
+	unstageMove(target: Point) {
 		this.pendingMoves = this.pendingMoves.filter((move) => !move.hasTarget(target));
 		let preLen = this.pendingMoves.length + 1;
 		while (preLen > this.pendingMoves.length) {
@@ -113,19 +124,21 @@ export class Game {
 		});
 
 		if (!this.commitStagedMoves()) {
-			return;
+			return false;
 		}
 
 		// Find pieces to capture
 		this.board.getDangerousPositions().forEach((pos) => {
-			console.log('Capturing', pos);
 			const piece = this.board.at(pos);
 			if (piece) {
 				new Move(pos, pos, this).capture();
 			}
 		});
 
+		console.log('Ending turn');
 		this.turn++;
+
+		return true;
 	}
 
 	/**

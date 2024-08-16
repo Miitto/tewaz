@@ -1,99 +1,55 @@
 <script lang="ts">
-	import { Game } from '$lib/Game.svelte';
-	import '$lib/styles/board.scss';
-	import { Fish, Hunter, PieceType, Team } from '$lib/Piece.svelte';
-	import { Terrain } from '$lib/Tile.svelte';
-	import type { Move } from '$lib/Move.svelte';
-	import { Coord } from '$lib/Coord';
-	import Tile from '$lib/components/Tile.svelte';
-	import Rules from '$lib/components/Rules.svelte';
-
-	let game = new Game();
-
-	/** Piece selected by the user */
-	let selectedPiece: Coord | null = $state(null);
-
-	/** Moves the selected piece can make */
-	let legalMoves: Move[] = $derived(game.getMoves(selectedPiece));
-
-	function selectPiece(pos: Coord) {
-		if (selectedPiece && pos.equals(selectedPiece)) {
-			selectedPiece = null;
-		} else {
-			selectedPiece = pos;
-		}
-	}
-
-	function pendMove(pos: Coord) {
-		if (selectedPiece) {
-			game.stageMove(selectedPiece, pos);
-			selectedPiece = null;
-		}
-	}
-
-	// $effect(() => {
-	// 	console.log(legalMoves);
-	// });
+	let roomCode = $state('');
+	const roomLink = $derived(`/online/${roomCode}`);
 </script>
 
+<h1>Tewăz</h1>
 <main>
-	<div class="left">
-		<div
-			class="board"
-			class:turn-one={game.teamTurn == Team.ONE}
-			class:turn-two={game.teamTurn == Team.TWO}
-		>
-			{#each game.tiles as row, i}
-				<div class="row">
-					{#each row as tile, j}
-						<Tile
-							{tile}
-							{legalMoves}
-							{selectedPiece}
-							{game}
-							{selectPiece}
-							{pendMove}
-							pos={new Coord(i, j)}
-						/>
-					{/each}
-				</div>
-			{/each}
+	<div class="play">
+		<div>
+			<h2>Local Play</h2>
+			<a href="/local">New Game</a>
 		</div>
-		<button
-			class="end-turn"
-			class:turn-one={game.teamTurn == Team.ONE}
-			class:turn-two={game.teamTurn == Team.TWO}
-			disabled={game.movesUsed != game.moveAllowance}
-			onclick={() => game.endTurn()}>End Turn</button
-		>
-		<p>Moves left: {game.moveAllowance - game.movesUsed}</p>
-	</div>
-	<div class="right">
-		<h2>Rules</h2>
-		<Rules />
+
+		<div class="online">
+			<h2>Online Play</h2>
+			<a href="/online/create">Create a Room</a>
+
+			<hr />
+			<div class="join">
+				<input bind:value={roomCode} placeholder="Room Code" />
+				{#if !!roomCode}
+					<a href={roomLink}>Join Room</a>
+				{:else}
+					<span>Join Room</span>
+				{/if}
+			</div>
+		</div>
 	</div>
 </main>
 
 <style lang="scss">
 	main {
 		display: flex;
-		justify-content: space-around;
-		padding: 1rem;
-		gap: 1rem;
-		flex-wrap: wrap;
-		flex-grow: 1;
+		height: 100vh;
+		padding: 1em;
 	}
 
-	.left {
+	h1 {
+		width: 100%;
+		text-align: center;
+	}
+
+	h2 {
+		margin-bottom: 0.5em;
+	}
+
+	.join {
 		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-	}
+		gap: 0.5em;
 
-	@media (prefers-color-scheme: dark) {
-		main {
-			background-color: #333;
-			color: white;
+		span {
+			color: grey;
 		}
 	}
 </style>

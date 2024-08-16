@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { Coord } from '$lib/Coord';
-	import type { Game } from '$lib/Game.svelte';
-	import type { Move } from '$lib/Move.svelte';
-	import { PieceType, Team, type Piece } from '$lib/Piece.svelte';
-	import type { Tile } from '$lib/Tile.svelte';
+	import { Coord } from '$lib/classes/Coord';
+	import type { Game } from '$lib/classes/Game.svelte';
+	import type { Move } from '$lib/classes/Move.svelte';
+	import { PieceType, Team, type Piece } from '$lib/classes/Piece.svelte';
+	import type { Tile } from '$lib/classes/Tile.svelte';
 
 	interface Props {
 		tile: Tile;
@@ -11,18 +11,22 @@
 		selectedPiece: Coord | null;
 		game: Game;
 		selectPiece: (pos: Coord) => void;
-		pendMove: (pos: Coord) => void;
+		stageMove: (pos: Coord) => void;
+		unstageMove: (target: Coord) => void;
 		pos: Coord;
 	}
 
-	const { tile, legalMoves, selectedPiece, game, selectPiece, pendMove, pos }: Props = $props();
+	const { tile, legalMoves, selectedPiece, game, selectPiece, stageMove, unstageMove, pos }: Props =
+		$props();
 
 	const hasSelectedPiece = $derived(selectedPiece != null);
 	const thisIsSelectedPiece = $derived(selectedPiece?.equals(pos));
 
 	const pieceMovingHere = $derived(game.pendingMoves.some((move) => move.hasTarget(pos)));
 	const atRisk = $derived(
-		game.pendingMoves.some((move) => move.willCaptureCoords().some((other) => pos.equals(other)))
+		game.pendingMoves.some((move) =>
+			move.willCaptureCoords().some((other: Coord) => pos.equals(other))
+		)
 	);
 
 	const legalMove = $derived(legalMoves.find((move) => pos.equals(move.target)));
@@ -56,7 +60,7 @@
 			class:piece={!!tile.piece}
 			class:danger={isDangerous}
 			onclick={() => {
-				pendMove(pos);
+				stageMove(pos);
 			}}
 		>
 			{@render token(tile.piece)}
@@ -66,7 +70,7 @@
 			disabled={selectedPiece != null}
 			class="moving-to"
 			class:piece={!!tile.piece}
-			onclick={() => game.unstageMove(pos)}
+			onclick={() => unstageMove(pos)}
 		>
 			{@render token(tile.piece)}
 		</button>

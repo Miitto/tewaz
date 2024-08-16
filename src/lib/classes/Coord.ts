@@ -1,5 +1,8 @@
 export type Point = Coord | [number, number];
 
+/**
+ * Represents a point on the board.
+ */
 export class Coord {
 	x: number;
 	y: number;

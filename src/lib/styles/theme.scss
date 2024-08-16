@@ -1,0 +1,39 @@
+:root {
+	--text: 0, 0%, 0%;
+	--bg: 0, 100%, 100%;
+
+	--primary: 211, 100%, 50%;
+	--secondary: 208, 7%, 46%;
+	--success: 134, 61%, 41%;
+	--info: 188, 78%, 41%;
+	--warning: 45, 100%, 51%;
+	--danger: 354, 70%, 54%;
+
+	--link: 211, 100%, 50%;
+
+	--water: 207, 90%, 65%;
+	--sand: 48, 100%, 75%;
+	--safe: 120, 100%, 74%;
+
+	--team-one: 0, 75%, 60%;
+	--team-one-text: 0, 0%, 0%;
+
+	--team-two: 240, 75%, 60%;
+	--team-two-text: 0, 0%, 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--text: 0, 100%, 100%;
+		--bg: 0, 0%, 10%;
+	}
+}
+
+a {
+	color: hsl(var(--link));
+}
+
+body {
+	color: hsl(var(--text));
+	background-color: hsl(var(--bg));
+}

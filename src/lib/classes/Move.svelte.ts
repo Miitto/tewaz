@@ -3,6 +3,20 @@ import { Coord, type Point } from './Coord';
 import type { Game } from './Game.svelte';
 import { Team, type Piece } from './Piece.svelte';
 
+export interface MovePayload {
+	position: Point;
+	target: Point;
+	team: Team;
+}
+
+/**
+ * Represents a move on the board.
+ * Tied to a game instance.
+ * Can be committed to the game board.
+ * Can be checked for validity.
+ * Can check if this move is dangerous for the piece, or will capture other pieces.
+ * Can also be a capture move for this piece, which will flip it and send it home.
+ */
 export class Move {
 	position: Coord;
 	target: Coord;
@@ -10,15 +24,28 @@ export class Move {
 	game: Game;
 	private discard = false;
 
-	constructor(position: Coord, target: Coord, game: Game) {
-		this.position = position;
-		this.target = target;
+	constructor(position: Point, target: Point, game: Game) {
+		if (position instanceof Coord) {
+			this.position = position;
+			this.target = target as Coord;
+		} else {
+			this.position = new Coord(position[0], position[1]);
+			this.target = new Coord((target as [number, number])[0], (target as [number, number])[1]);
+		}
 		const piece = game.board.at(position);
 		if (!piece) {
 			throw new Error('No piece at position');
 		}
 		this.piece = piece;
 		this.game = game;
+	}
+
+	asPayload(): MovePayload {
+		return {
+			position: this.position,
+			target: this.target,
+			team: this.piece.team
+		};
 	}
 
 	hasTarget(target: Point): boolean {
@@ -32,9 +59,10 @@ export class Move {
 	/**
 	 * Check if the move is valid relative to the current game state
 	 * @param committing if the move is being committed. Will skip move cost check if true, and log failed checks
+	 * @param logAnyway if the move should log failed checks regardless of committing
 	 * @returns true if the move is valid, false otherwise
 	 */
-	isValid(committing: boolean = false): boolean {
+	isValid(committing: boolean = false, logAnyway: boolean = false): boolean {
 		const [x, y] = this.position;
 		const [nx, ny] = this.target;
 
@@ -43,34 +71,34 @@ export class Move {
 
 		// Check if it is the team's turn
 		if (this.game.teamTurn !== this.piece?.team) {
-			if (committing) console.log('Not team turn');
+			if (committing || logAnyway) console.log('Not team turn');
 			return false;
 		}
 
 		// Check if the piece would exceed the move allowance
 		if (!committing && this.game.movesUsed > this.game.moveAllowance - this.piece.moveCost) {
-			if (committing) console.log('Move allowance exceeded');
+			if (committing || logAnyway) console.log('Move allowance exceeded');
 			return false;
 		}
 
 		// Check if the move is within bounds
 		if (nx < 0 || nx >= boardHeight || ny < 0 || ny >= boardWidth) {
-			if (committing) console.log('Out of bounds');
+			if (committing || logAnyway) console.log('Out of bounds');
 			return false;
 		}
 
 		// Opponent's safe zone
 		if (this.piece.team === Team.ONE && ny === boardWidth - 1) {
-			if (committing) console.log('Opponent safe zone');
+			if (committing || logAnyway) console.log('Opponent safe zone');
 			return false;
 		} else if (this.piece.team === Team.TWO && ny === 0) {
-			if (committing) console.log('Opponent safe zone');
+			if (committing || logAnyway) console.log('Opponent safe zone');
 			return false;
 		}
 
 		// Check the piece can move in that direction
 		if (!this.piece.moveOffsets.some(([ox, oy]) => ox === dx && oy === dy)) {
-			if (committing) console.log('Invalid move offset');
+			if (committing || logAnyway) console.log('Invalid move offset');
 			return false;
 		}
 
@@ -80,7 +108,7 @@ export class Move {
 				this.game.stagedTeamColCount(ny, this.piece.team, this.position) >=
 				this.game.teamMaxInSandCol
 			) {
-				if (committing) console.log('Sand col full');
+				if (committing || logAnyway) console.log('Sand col full');
 				return false;
 			}
 		} else if (waterZoneCols.includes(ny)) {
@@ -88,7 +116,7 @@ export class Move {
 				this.game.stagedTeamColCount(ny, this.piece.team, this.position) >=
 				this.game.teamMaxInWaterCol
 			) {
-				if (committing) console.log('Water col full');
+				if (committing || logAnyway) console.log('Water col full');
 				return false;
 			}
 		}
@@ -103,7 +131,7 @@ export class Move {
 		// Ensure it isn't hopping over pieces
 		while (xOffset !== x || yOffset !== y) {
 			if (board.at(xOffset, yOffset) !== null && board.at(xOffset, yOffset) !== this.piece) {
-				if (committing) console.log('Piece in the way at', xOffset, yOffset);
+				if (committing || logAnyway) console.log('Piece in the way at', xOffset, yOffset);
 				return false;
 			}
 			if (dx != 0 && xOffset !== x) {

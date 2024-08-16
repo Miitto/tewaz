@@ -1,10 +1,17 @@
 // TODO: Theming
 
 .board {
+	display: grid;
+	grid-auto-flow: column;
+	grid-template-columns: repeat(11, auto);
+	flex: 0 1 50%;
+	gap: 0;
+
 	button {
 		border: none;
 		border-radius: 0;
 		background-color: rgba(0, 0, 0, var(--alpha, 0));
+		padding: 0;
 
 		&:not(:disabled) {
 			&:hover {
@@ -18,12 +25,18 @@
 	}
 
 	.row {
-		display: flex;
+		display: grid;
+		grid-template-columns: subgrid;
+		grid-column: 1 / -1;
+
+		height: fit-content;
 	}
+
 	.cell {
-		width: 50px;
-		height: 50px;
 		border: 1px solid black;
+		aspect-ratio: 1 / 1;
+		max-width: 100%;
+		max-height: 100%;
 
 		button {
 			width: 100%;
@@ -36,15 +49,15 @@
 	}
 
 	.safe {
-		background-color: #9ee09e;
+		background-color: hsl(var(--safe));
 	}
 
 	.sand {
-		background-color: #ebeb9c;
+		background-color: hsl(var(--sand));
 	}
 
 	.water {
-		background-color: #a1c3f0;
+		background-color: hsl(var(--water));
 	}
 
 	.piece {
@@ -61,29 +74,31 @@
 		}
 
 		.token {
-			display: block;
 			position: absolute;
 			top: 0;
 			left: 0;
 			width: 100%;
 			height: 100%;
-			border-radius: 100%;
+			border-radius: 50%;
 			display: flex;
 			justify-content: center;
 			align-items: center;
 
 			&.team-one {
-				background-color: #f009;
+				color: hsl(var(--team-one-text));
+				background-color: hsl(var(--team-one));
 			}
 
 			&.team-two {
-				background-color: #00f9;
+				color: hsl(var(--team-two-text));
+				background-color: hsl(var(--team-two));
 			}
 		}
 	}
 
 	.legal-move {
 		position: relative;
+		padding: 0;
 
 		&::before {
 			content: '';
@@ -105,7 +120,7 @@
 	}
 
 	.danger {
-		border: 2px solid red;
+		outline: hsl(var(--danger)) solid 2px;
 	}
 }
 
@@ -115,11 +130,13 @@
 	border: none;
 
 	&.turn-one {
-		background-color: rgba(255, 50, 50, var(--alpha, 1));
+		color: hsl(var(--team-one-text));
+		background-color: hsla(var(--team-one), var(--alpha, 1));
 	}
 
 	&.turn-two {
-		background-color: #00f9;
+		color: hsl(var(--team-two-text));
+		background-color: hsla(var(--team-two), var(--alpha, 1));
 	}
 
 	&:disabled {

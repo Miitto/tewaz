@@ -9,6 +9,9 @@ export const enum Terrain {
 	WATER
 }
 
+/**
+ * Represents a tile on the board with calculated state.
+ */
 export class Tile {
 	committed = false;
 	piece: Piece | null = null;

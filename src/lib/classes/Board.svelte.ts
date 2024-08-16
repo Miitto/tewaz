@@ -8,6 +8,10 @@ export const waterZoneCols = [5];
 export const boardWidth = 11;
 export const boardHeight = 5;
 
+/**
+ * Represents a board with pieces on it.
+ * Can calculate information based on pieces current locations
+ */
 export class Board {
 	board: (Piece | null)[][];
 

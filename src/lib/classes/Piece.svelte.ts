@@ -8,11 +8,13 @@ export const enum Team {
 	TWO
 }
 
+/**
+ * Represents a piece on the board.
+ */
 export interface Piece {
 	team: Team;
 
 	get type(): PieceType;
-	instanceNo: number;
 	moveOffsets: [number, number][];
 	get moveCost(): number;
 	get captureOffsets(): [number, number][];
@@ -24,14 +26,10 @@ export interface Piece {
 export class Fish implements Piece {
 	team: Team;
 	t: PieceType;
-	instanceNo: number;
-	static nextNo = 0;
 
 	constructor(team: Team) {
 		this.team = team;
 		this.t = PieceType.FISH;
-		this.instanceNo = Fish.nextNo;
-		Fish.nextNo++;
 	}
 
 	get type(): PieceType {
@@ -89,14 +87,10 @@ export class Fish implements Piece {
 export class Hunter implements Piece {
 	team: Team;
 	t: PieceType;
-	instanceNo: number;
-	static nextNo = 0;
 
 	constructor(team: Team) {
 		this.team = team;
 		this.t = PieceType.HUNTER;
-		this.instanceNo = Hunter.nextNo;
-		Hunter.nextNo++;
 	}
 	get type(): PieceType {
 		return this.t;
