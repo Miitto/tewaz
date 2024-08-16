@@ -59,6 +59,15 @@ export class Move {
 			return false;
 		}
 
+		// Opponent's safe zone
+		if (this.piece.team === Team.ONE && ny === boardWidth - 1) {
+			if (committing) console.log('Opponent safe zone');
+			return false;
+		} else if (this.piece.team === Team.TWO && ny === 0) {
+			if (committing) console.log('Opponent safe zone');
+			return false;
+		}
+
 		// Check the piece can move in that direction
 		if (!this.piece.moveOffsets.some(([ox, oy]) => ox === dx && oy === dy)) {
 			if (committing) console.log('Invalid move offset');
