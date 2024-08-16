@@ -96,28 +96,7 @@ export class Board {
 				return false;
 			}
 
-			if (piece.captureNeedsMirror) {
-				const mirrorCoord = [x + dx * 2, y + dy * 2] as [number, number];
-				if (!this.isInBounds(mirrorCoord)) {
-					return false;
-				}
-				const mirroredPiece = this.at([x + dx * 2, y + dy * 2]);
-				if (!mirroredPiece) {
-					return false;
-				}
-				console.log('mirrored', mirroredPiece);
-				if (mirroredPiece.team !== piece.team) {
-					console.log('not same team');
-					return false;
-				}
-				if (mirroredPiece.captureMirrorSameType && mirroredPiece.type !== piece.type) {
-					console.log('not same type');
-					return false;
-				}
-				return true;
-			} else {
-				return true;
-			}
+			return this.captureCheck(pos, [dx, dy]);
 		});
 	}
 
@@ -141,24 +120,66 @@ export class Board {
 	}
 
 	/**
-	 * Check if a certain position is dangerous for a team
+	 * Check if a certain position is dangerous
 	 * @param pos position to check
-	 * @param team team it is dangerous for
-	 * @returns true if pos is dangerous for team
+	 * @returns true if pos is dangerous
 	 */
-	posIsDangerous(pos: Coord): boolean {
+	posIsDangerous(pos: Coord, team: Team): boolean {
 		const [x, y] = pos;
 
 		return this.board.some((row, i) => {
 			return row.some((piece, j) => {
-				return piece?.captureOffsets.some(([dx, dy]) => {
-					if (x + dx !== i || y + dy !== j) {
+				if (!piece) {
+					return false;
+				}
+				if (piece?.team === team) {
+					return false;
+				}
+				return piece.captureOffsets.some(([dx, dy]) => {
+					if (i + dx !== x || j + dy !== y) {
 						return false;
 					}
 
-					return this.posCanCapture([i, j], [x, y]);
+					return this.captureCheck([i, j], [dx, dy]);
 				});
 			});
 		});
+	}
+
+	/**
+	 * Check if the conditions are met for a piece to capture at this offset (mirror, same type, etc)
+	 * @param pos pos that is attempting to capture
+	 * @param offset offset to capture
+	 * @returns true if the conditions are met
+	 */
+	private captureCheck(pos: Point, offset: [number, number]): boolean {
+		const [x, y] = pos;
+		const [dx, dy] = offset;
+
+		const piece = this.at(pos);
+
+		if (!piece) {
+			return false;
+		}
+
+		if (piece.captureNeedsMirror) {
+			const mirrorCoord = [x + dx * 2, y + dy * 2] as [number, number];
+			if (!this.isInBounds(mirrorCoord)) {
+				return false;
+			}
+			const mirroredPiece = this.at([x + dx * 2, y + dy * 2]);
+			if (!mirroredPiece) {
+				return false;
+			}
+			if (mirroredPiece.team !== piece.team) {
+				return false;
+			}
+			if (mirroredPiece.captureMirrorSameType && mirroredPiece.type !== piece.type) {
+				return false;
+			}
+			return true;
+		} else {
+			return true;
+		}
 	}
 }

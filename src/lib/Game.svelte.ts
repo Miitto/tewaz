@@ -73,6 +73,11 @@ export class Game {
 	 */
 	unstageMove(target: Coord) {
 		this.pendingMoves = this.pendingMoves.filter((move) => !move.hasTarget(target));
+		let preLen = this.pendingMoves.length + 1;
+		while (preLen > this.pendingMoves.length) {
+			preLen = this.pendingMoves.length;
+			this.pendingMoves = this.pendingMoves.filter((move) => move.isValid());
+		}
 	}
 
 	/**
@@ -189,5 +194,13 @@ export class Game {
 				})
 				.filter((move) => move.isValid()) as Move[]) ?? []
 		);
+	}
+
+	/**
+	 * Apply all pending moves to a given board. Will not remove the moves from the pending list. Used for creating a board state with pending moves
+	 * @param board board to apply moves to
+	 */
+	applyPendingMoves(board: Board) {
+		this.pendingMoves.forEach((move) => move.commit(board, false));
 	}
 }

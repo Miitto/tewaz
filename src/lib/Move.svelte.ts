@@ -1,4 +1,4 @@
-import { Board, boardWidth, sandZoneCols, waterZoneCols } from './Board.svelte';
+import { Board, boardHeight, boardWidth, sandZoneCols, waterZoneCols } from './Board.svelte';
 import { Coord, type Point } from './Coord';
 import type { Game } from './Game.svelte';
 import { Team, type Piece } from './Piece.svelte';
@@ -29,29 +29,39 @@ export class Move {
 		return this.position.equals(position);
 	}
 
-	isValid(skipMoveCost = false): boolean {
-		const board = this.game.board;
+	/**
+	 * Check if the move is valid relative to the current game state
+	 * @param committing if the move is being committed. Will skip move cost check if true, and log failed checks
+	 * @returns true if the move is valid, false otherwise
+	 */
+	isValid(committing: boolean = false): boolean {
 		const [x, y] = this.position;
 		const [nx, ny] = this.target;
 
 		const dx = nx - x;
 		const dy = ny - y;
 
+		// Check if it is the team's turn
 		if (this.game.teamTurn !== this.piece?.team) {
+			if (committing) console.log('Not team turn');
 			return false;
 		}
 
-		if (!skipMoveCost && this.game.movesUsed > this.game.moveAllowance - this.piece.moveCost) {
-			return false;
-		}
-
-		// Check the target is valid
-		if (!this.piece.moveOffsets.some(([ox, oy]) => ox === dx && oy === dy)) {
+		// Check if the piece would exceed the move allowance
+		if (!committing && this.game.movesUsed > this.game.moveAllowance - this.piece.moveCost) {
+			if (committing) console.log('Move allowance exceeded');
 			return false;
 		}
 
 		// Check if the move is within bounds
-		if (nx < 0 || nx >= board.board.length || ny < 0 || ny >= board.board[0].length) {
+		if (nx < 0 || nx >= boardHeight || ny < 0 || ny >= boardWidth) {
+			if (committing) console.log('Out of bounds');
+			return false;
+		}
+
+		// Check the piece can move in that direction
+		if (!this.piece.moveOffsets.some(([ox, oy]) => ox === dx && oy === dy)) {
+			if (committing) console.log('Invalid move offset');
 			return false;
 		}
 
@@ -61,6 +71,7 @@ export class Move {
 				this.game.stagedTeamColCount(ny, this.piece.team, this.position) >=
 				this.game.teamMaxInSandCol
 			) {
+				if (committing) console.log('Sand col full');
 				return false;
 			}
 		} else if (waterZoneCols.includes(ny)) {
@@ -68,6 +79,7 @@ export class Move {
 				this.game.stagedTeamColCount(ny, this.piece.team, this.position) >=
 				this.game.teamMaxInWaterCol
 			) {
+				if (committing) console.log('Water col full');
 				return false;
 			}
 		}
@@ -75,14 +87,16 @@ export class Move {
 		let xOffset = nx;
 		let yOffset = ny;
 
-		// FIXME: I managed to hop over a piece, cannot seem to reproduce
+		const board = new Board(this.game.board); // Copy board
+
+		this.game.applyPendingMoves(board);
 
 		// Ensure it isn't hopping over pieces
 		while (xOffset !== x || yOffset !== y) {
-			if (board.board[xOffset][yOffset] !== null) {
+			if (board.at(xOffset, yOffset) !== null && board.at(xOffset, yOffset) !== this.piece) {
+				if (committing) console.log('Piece in the way at', xOffset, yOffset);
 				return false;
 			}
-
 			if (dx != 0 && xOffset !== x) {
 				xOffset -= dx > 0 ? 1 : -1;
 			}
@@ -117,7 +131,7 @@ export class Move {
 	}
 
 	isDangerous(): boolean {
-		return this.game.board.posIsDangerous(this.target);
+		return this.game.board.posIsDangerous(this.target, this.piece.team);
 	}
 
 	static findHomePositions(game: Game, team: Team): Coord[] {
