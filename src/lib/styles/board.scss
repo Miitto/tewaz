@@ -1,3 +1,5 @@
+// TODO: Theming
+
 .board {
 	button {
 		border: none;
@@ -34,15 +36,15 @@
 	}
 
 	.safe {
-		background-color: #44ff4455;
+		background-color: #9ee09e;
 	}
 
 	.sand {
-		background-color: #ffff5555;
+		background-color: #ebeb9c;
 	}
 
 	.water {
-		background-color: #7777ff55;
+		background-color: #a1c3f0;
 	}
 
 	.piece {
@@ -90,7 +92,7 @@
 			left: 0;
 			width: 100%;
 			height: 100%;
-			background-color: #0f03;
+			background-color: #5f53;
 			pointer-events: none;
 		}
 	}
@@ -104,5 +106,31 @@
 
 	.danger {
 		border: 2px solid red;
+	}
+}
+
+.end-turn {
+	width: fit-content;
+	padding: 0.5em 1em;
+	border: none;
+
+	&.turn-one {
+		background-color: rgba(255, 50, 50, var(--alpha, 1));
+	}
+
+	&.turn-two {
+		background-color: #00f9;
+	}
+
+	&:disabled {
+		--alpha: 0.25;
+	}
+
+	&:hover:not(:disabled) {
+		--alpha: 0.75;
+	}
+
+	&:active:not(:disabled) {
+		--alpha: 0.5;
 	}
 }

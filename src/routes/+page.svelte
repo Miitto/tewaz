@@ -6,6 +6,7 @@
 	import type { Move } from '$lib/Move.svelte';
 	import { Coord } from '$lib/Coord';
 	import Tile from '$lib/components/Tile.svelte';
+	import Rules from '$lib/components/Rules.svelte';
 
 	let game = new Game();
 
@@ -35,29 +36,64 @@
 	// });
 </script>
 
-<div
-	class="board"
-	class:turn-one={game.teamTurn == Team.ONE}
-	class:turn-two={game.teamTurn == Team.TWO}
->
-	{#each game.tiles as row, i}
-		<div class="row">
-			{#each row as tile, j}
-				<Tile
-					{tile}
-					{legalMoves}
-					{selectedPiece}
-					{game}
-					{selectPiece}
-					{pendMove}
-					pos={new Coord(i, j)}
-				/>
+<main>
+	<div class="left">
+		<div
+			class="board"
+			class:turn-one={game.teamTurn == Team.ONE}
+			class:turn-two={game.teamTurn == Team.TWO}
+		>
+			{#each game.tiles as row, i}
+				<div class="row">
+					{#each row as tile, j}
+						<Tile
+							{tile}
+							{legalMoves}
+							{selectedPiece}
+							{game}
+							{selectPiece}
+							{pendMove}
+							pos={new Coord(i, j)}
+						/>
+					{/each}
+				</div>
 			{/each}
 		</div>
-	{/each}
-</div>
-<button onclick={() => game.endTurn()}>End Turn</button>
-<p>Moves left: {game.moveAllowance - game.movesUsed}</p>
+		<button
+			class="end-turn"
+			class:turn-one={game.teamTurn == Team.ONE}
+			class:turn-two={game.teamTurn == Team.TWO}
+			disabled={game.movesUsed != game.moveAllowance}
+			onclick={() => game.endTurn()}>End Turn</button
+		>
+		<p>Moves left: {game.moveAllowance - game.movesUsed}</p>
+	</div>
+	<div class="right">
+		<h2>Rules</h2>
+		<Rules />
+	</div>
+</main>
 
 <style lang="scss">
+	main {
+		display: flex;
+		justify-content: space-around;
+		padding: 1rem;
+		gap: 1rem;
+		flex-wrap: wrap;
+		flex-grow: 1;
+	}
+
+	.left {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		main {
+			background-color: #333;
+			color: white;
+		}
+	}
 </style>
