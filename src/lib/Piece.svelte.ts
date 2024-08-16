@@ -103,10 +103,6 @@ export class Hunter implements Piece {
 	}
 	get moveOffsets(): [number, number][] {
 		return [
-			[1, 1],
-			[-1, 1],
-			[1, -1],
-			[-1, -1],
 			[0, 1],
 			[1, 0],
 			[0, -1],
