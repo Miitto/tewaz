@@ -5,6 +5,7 @@ import { Team } from './Piece.svelte';
 
 export interface MatchPayload {
 	id: UID;
+	team?: Team;
 }
 
 export interface Match {
@@ -47,12 +48,21 @@ export class ClientMatch implements Match {
 
 	asPayload(): MatchPayload {
 		return {
-			id: this.id
+			id: this.id,
+			team: this.team ?? undefined
 		};
 	}
 
+	streamValid(): boolean {
+		if (!this.stream) {
+			return false;
+		}
+
+		return true;
+	}
+
 	async ensureStream() {
-		if (this.stream) {
+		if (this.streamValid()) {
 			return;
 		}
 		const response = await fetch(`/api/online/connect/${this.id}`);
@@ -169,6 +179,11 @@ export class ClientMatch implements Match {
 	async listen() {
 		if (!this.stream) {
 			await this.ensureStream();
+		}
+
+		if (this.stream?.locked) {
+			console.error('Stream is locked');
+			return;
 		}
 
 		const reader = this.stream!.getReader();

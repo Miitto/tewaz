@@ -4,7 +4,6 @@ import { Move } from './Move.svelte';
 import { Team } from './Piece.svelte';
 import { Tile } from './Tile.svelte';
 
-// TODO: hold game config such as move allowance, team piece limits, etc in a new object - so they can be configured in the game
 export interface GameConfig {
 	teamMaxInSandCol: number;
 	teamMaxInWaterCol: number;

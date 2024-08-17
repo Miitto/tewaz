@@ -6,26 +6,32 @@
 	import Rules from '$lib/components/Rules.svelte';
 	import Board from '$lib/components/Board.svelte';
 	import { page } from '$app/stores';
-	import { getMatch } from '$lib/client/currentMatches.svelte.js';
+	import { getMatch, leaveMatch } from '$lib/client/currentMatches.svelte.js';
 	import { ClientMatch } from '$lib/classes/Match.svelte';
 	import { onMount } from 'svelte';
 
 	const { data } = $props();
 
-	const matchExists = $derived(data.matchExists);
 	const matchString = $derived(data.matchString);
 	const pendingMoves = $derived(data.pendingMoves);
 
 	let isSetup = $state(false);
 
-	onMount(() => {
+	let match = $state<ClientMatch | null>(null);
+	const matchExists = $derived(data.matchExists);
+
+	onMount(async () => {
+		if (!matchExists) {
+			leaveMatch($page.params.id);
+			return;
+		}
+		match = (await getMatch($page.params.id)) ?? new ClientMatch($page.params.id, null);
+
 		match?.setupBoard(matchString, pendingMoves);
 		isSetup = true;
 
-		if (matchExists) match.listen();
+		match.listen();
 	});
-
-	let match = $state(getMatch($page.params.id) ?? new ClientMatch($page.params.id, null));
 
 	/** Piece selected by the user */
 	let selectedPiece: Coord | null = $state(null);
@@ -65,7 +71,7 @@
 
 <svelte:head>
 	{#if matchExists}
-		<title>Tewăz - Team {match!.team === Team.ONE ? 'One' : 'Two'}</title>
+		<title>Tewăz - Team {match?.team === Team.ONE ? 'One' : 'Two'}</title>
 	{:else}
 		<title>Tewăz - Match not found</title>
 	{/if}
@@ -96,8 +102,12 @@
 					onclick={() => match!.endTurn()}>End Turn</button
 				>
 				<p>Moves left: {match!.game.config.moveAllowance - match!.game.movesUsed}</p>
-				{#if match.team === null}
+				{#if match!.team === null}
 					<p>You are Spectating</p>
+				{:else if match!.team === Team.ONE}
+					<p>You are Team One</p>
+				{:else}
+					<p>You are Team Two</p>
 				{/if}
 			</div>
 			<div class="right">
