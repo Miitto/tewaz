@@ -4,6 +4,7 @@ import type { UID } from '$lib/server/util.server';
 
 let currentMatches: ClientMatch[] = $state([]);
 
+// TODO: Store matches in local storage so you can rejoin correctly on a disconnect
 export async function createMatch(): Promise<ClientMatch> {
 	const match = await ClientMatch.create();
 	console.log('Created Match', match);
