@@ -6,6 +6,7 @@ let currentMatches: ClientMatch[] = $state([]);
 
 export async function createMatch(): Promise<ClientMatch> {
 	const match = await ClientMatch.create();
+	console.log('Created Match', match);
 	currentMatches = [...currentMatches, match];
 	return match;
 }

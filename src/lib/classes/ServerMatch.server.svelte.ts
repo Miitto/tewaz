@@ -4,6 +4,7 @@ import { createSSE } from '$lib/server/sse.server';
 import { type MovePayload } from './Move.svelte';
 import { Game } from './Game.svelte';
 import type { Match, MatchPayload } from './Match.svelte';
+import type { Point } from './Coord';
 
 export class ServerMatch implements Match {
 	id: UID;
@@ -11,16 +12,19 @@ export class ServerMatch implements Match {
 
 	game: Game;
 
-	readable: ReadableStream;
-	subscribe: (emitter: EventEmitter, id: string) => void;
+	get readable(): ReadableStream {
+		const { readable, subscribe } = createSSE();
+
+		subscribe(this.emitter, 'move');
+		subscribe(this.emitter, 'unmove');
+		subscribe(this.emitter, 'end-turn');
+
+		return readable;
+	}
 
 	constructor(id: UID, emitter?: EventEmitter) {
 		this.id = id;
 		this.emitter = emitter ?? new EventEmitter();
-
-		const { readable, subscribe } = createSSE();
-		this.readable = readable;
-		this.subscribe = subscribe;
 
 		this.game = new Game();
 	}
@@ -38,19 +42,20 @@ export class ServerMatch implements Match {
 		return true;
 	}
 
-	async unstageMove(target: [number, number]) {
+	async unstageMove(target: Point) {
 		this.game.unstageMove(target);
 
-		this.emitter.emit('unmove', target);
+		this.emitter.emit('unmove', { target: target, team: this.game.teamTurn });
 		return true;
 	}
 
 	async endTurn(): Promise<boolean> {
+		const team = this.game.teamTurn;
 		if (!this.game.endTurn()) {
 			return false;
 		}
 
-		this.emitter.emit('end-turn');
+		this.emitter.emit('end-turn', { team: team });
 		return true;
 	}
 }

@@ -6,7 +6,6 @@ const matches: ServerMatch[] = $state([]);
 export function createMatch(): ServerMatch {
 	const match = new ServerMatch(uniqueId());
 	matches.push(match);
-	console.log('createMatch', match.id);
 
 	return match;
 }

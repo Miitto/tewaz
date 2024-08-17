@@ -1,6 +1,6 @@
 <script lang="ts">
 	let roomCode = $state('');
-	const roomLink = $derived(`/online/${roomCode}`);
+	const roomLink = $derived(`/online/join/${roomCode}`);
 </script>
 
 <h1>Tewăz</h1>

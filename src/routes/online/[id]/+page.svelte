@@ -31,6 +31,8 @@
 	onMount(() => {
 		match?.setupBoard(matchString, pendingMoves);
 		isSetup = true;
+
+		match.listen();
 	});
 
 	let match = $state(getMatch($page.params.id) ?? new ClientMatch($page.params.id, null));
@@ -62,6 +64,11 @@
 	}
 
 	function unstageMove(target: Point) {
+		if (match!.game.teamTurn != match!.team) {
+			console.log('Not your turn');
+			return;
+		}
+
 		match!.unstageMove(target);
 	}
 
@@ -91,7 +98,8 @@
 					class="end-turn"
 					class:turn-one={match!.game.teamTurn == Team.ONE}
 					class:turn-two={match!.game.teamTurn == Team.TWO}
-					disabled={match!.game.movesUsed != match!.game.moveAllowance}
+					disabled={match!.game.movesUsed != match!.game.moveAllowance ||
+						match!.game.teamTurn != match!.team}
 					onclick={() => match!.endTurn()}>End Turn</button
 				>
 				<p>Moves left: {match!.game.moveAllowance - match!.game.movesUsed}</p>

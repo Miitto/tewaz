@@ -1,5 +1,11 @@
 import { EventEmitter } from 'node:events';
 
+interface Payload {
+	id: number;
+	event?: string;
+	data: unknown;
+}
+
 export function createSSE(last_id = 0, retry = 0) {
 	let id = last_id;
 	const { readable, writable } = new TransformStream({
@@ -9,14 +15,13 @@ export function createSSE(last_id = 0, retry = 0) {
 			if (retry > 0) controller.enqueue(`retry: ${retry}\n\n`);
 		},
 		transform({ event, data }, controller) {
-			let msg = `id: ${++id}\n`;
-			if (event) msg += `event: ${event}\n`;
-			if (typeof data === 'string') {
-				msg += 'data: ' + data.trim().replace(/\n+/gm, '\ndata: ') + '\n';
-			} else {
-				msg += `data: ${JSON.stringify(data)}\n`;
-			}
-			controller.enqueue(msg + '\n');
+			const obj: Payload = {
+				id: ++id,
+				data: data
+			};
+			if (event) obj.event = event;
+
+			controller.enqueue(JSON.stringify(obj));
 		}
 	});
 

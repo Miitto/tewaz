@@ -47,10 +47,10 @@ export class ClientMatch implements Match {
 		if (this.stream) {
 			return;
 		}
-		const response = await fetch('/api/online/connect', {
+		const response = await fetch(`/api/online/connect/${this.id}`, {
 			method: 'GET',
 			headers: {
-				'match-id': this.id.toString()
+				team: this.team?.toString() ?? ''
 			}
 		});
 
@@ -62,9 +62,9 @@ export class ClientMatch implements Match {
 	}
 
 	static async create(): Promise<ClientMatch> {
-		const response = await fetch('/api/online/create', {
-			method: 'GET'
-		});
+		console.log('Creating Match');
+		const response = await fetch('/api/online/create');
+		console.log('Response:', response);
 
 		if (!response.ok) {
 			console.error('Failed to create room:', response.statusText);
@@ -110,12 +110,21 @@ export class ClientMatch implements Match {
 	async unstageMove(target: Point) {
 		this.game.unstageMove(target);
 
+		let x;
+		let y;
+
+		if (Array.isArray(target)) {
+			[x, y] = target;
+		} else {
+			({ x, y } = target);
+		}
+
 		const response = await fetch(`/api/online/unstage-move/${this.id}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(target)
+			body: JSON.stringify({ target: { x, y } })
 		});
 
 		if (!response.ok) {
@@ -165,5 +174,54 @@ export class ClientMatch implements Match {
 			([position, target]) =>
 				new Move(new Coord(position[0], position[1]), new Coord(target[0], target[1]), this.game)
 		);
+	}
+
+	async listen() {
+		if (!this.stream) {
+			await this.getStream();
+		}
+
+		const reader = this.stream!.getReader();
+
+		while (true) {
+			const { value, done } = await reader.read();
+
+			if (done) {
+				break;
+			}
+
+			if (value.startsWith(':')) {
+				console.log('Received:', value);
+				continue;
+			}
+
+			const { data, event } = JSON.parse(value);
+
+			console.log(data);
+
+			// Ignore events from the same team - they are already handled locally
+			if (data.team === this.team) {
+				continue;
+			}
+
+			switch (event) {
+				case 'move':
+					this.game.stageMove(
+						[data.position.x, data.position.y],
+						[data.target.x, data.target.y],
+						false
+					);
+					break;
+				case 'unmove':
+					this.game.unstageMove([data.target.x, data.target.y]);
+					break;
+				case 'end-turn':
+					this.game.endTurn();
+					break;
+				case 'setup':
+					this.setupBoard(data.board, data.pendingMoves);
+					break;
+			}
+		}
 	}
 }
