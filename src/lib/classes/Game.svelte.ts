@@ -31,7 +31,7 @@ export class Game {
 		waterCols: [5],
 		startingTeam: null,
 		initialBoardSetup:
-			'0 ' + 'F..........f ' + 'F..........f ' + 'H..........h ' + 'F..........f ' + 'F..........f'
+			'F..........f ' + 'F..........f ' + 'H..........h ' + 'F..........f ' + 'F..........f'
 	};
 
 	board: Board = $state(new Board());
@@ -48,7 +48,7 @@ export class Game {
 		}
 		if (config.initialBoardSetup) {
 			this.config.initialBoardSetup = config.initialBoardSetup;
-			this.setupBoard(config.initialBoardSetup, []);
+			this.setupBoard('0 ' + config.initialBoardSetup, []);
 		}
 
 		if (config.teamMaxInSandCol) {
@@ -276,7 +276,6 @@ export class Game {
 	 */
 	setupBoard(str: string, pendingMoves: [[number, number], [number, number]][]) {
 		const [turn, ...rows] = str.split(' ');
-		console.log(turn, rows);
 
 		this.turn = parseInt(turn);
 

@@ -2,7 +2,7 @@ import EventEmitter from 'node:events';
 import type { UID } from '../server/util.server';
 import { createSSE } from '$lib/server/sse.server';
 import { type MovePayload } from './Move.svelte';
-import { Game } from './Game.svelte';
+import { Game, type GameConfig } from './Game.svelte';
 import type { Match, MatchPayload } from './Match.svelte';
 import type { Point } from './Coord';
 import { PieceType, Team } from './Piece.svelte';
@@ -23,11 +23,11 @@ export class ServerMatch implements Match {
 		return readable;
 	}
 
-	constructor(id: UID, emitter?: EventEmitter) {
+	constructor(id: UID, config?: GameConfig, emitter?: EventEmitter) {
 		this.id = id;
 		this.emitter = emitter ?? new EventEmitter();
 
-		this.game = new Game();
+		this.game = new Game(config);
 	}
 
 	asPayload(): MatchPayload {

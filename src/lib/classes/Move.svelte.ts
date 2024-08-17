@@ -159,8 +159,6 @@ export class Move {
 		if (!this.discard) {
 			if (board.board[this.target.x][this.target.y] === null) {
 				board.board[this.target.x][this.target.y] = this.piece;
-			} else {
-				console.log('Piece lost', this.piece);
 			}
 		}
 
@@ -192,13 +190,11 @@ export class Move {
 		} else {
 			// TODO: Choose where to put the piece
 			this.target = safeSpots[0];
-			console.log('Sending home', this.target);
 		}
 		this.commit();
 	}
 
 	capture() {
-		console.log('Capturing', this.target);
 		this.piece.flip();
 		this.sendHome();
 	}

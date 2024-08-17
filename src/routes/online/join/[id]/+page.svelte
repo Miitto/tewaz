@@ -11,3 +11,9 @@
 		goto(`/online/${match.id}`);
 	});
 </script>
+
+<svelte:head>
+	<title>Tewăz - Joining Match</title>
+</svelte:head>
+
+<p>If you are stuck here, please refresh the page</p>

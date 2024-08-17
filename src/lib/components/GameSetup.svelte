@@ -8,13 +8,14 @@
 		Hunter
 	} from '$lib/classes/Piece.svelte';
 	import { Board } from '$lib/classes/Board.svelte';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
 		onNewConfig: (config: GameConfig) => void;
-		close: () => void;
+		saveButton?: Snippet<[() => void]>;
 	}
 
-	const { onNewConfig, close }: Props = $props();
+	const { onNewConfig, saveButton }: Props = $props();
 
 	interface Piece {
 		team: Team | null;
@@ -140,7 +141,7 @@
 		selectedPaint = null;
 	}
 
-	function onSave() {
+	function save() {
 		const newBoard: Board = new Board();
 		const pieceBoard: (PieceClass | null)[][] = board.map((row) =>
 			row.map((piece) => {
@@ -155,7 +156,7 @@
 
 		newBoard.board = pieceBoard;
 
-		const boardString = '0 ' + newBoard.toString();
+		const boardString = newBoard.toString();
 
 		onNewConfig({
 			initialBoardSetup: boardString,
@@ -166,8 +167,6 @@
 			waterCols,
 			startingTeam
 		});
-
-		close();
 	}
 </script>
 
@@ -278,9 +277,13 @@
 		</select>
 	</div>
 
-	<div class="save">
-		<button onclick={onSave}>Save</button>
-	</div>
+	{#if saveButton}
+		{@render saveButton(save)}
+	{:else}
+		<div class="save">
+			<button onclick={save}>Save</button>
+		</div>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -390,7 +393,7 @@
 			cursor: pointer;
 
 			&.active {
-				outline: hsl(var(--text)) solid 2px;
+				outline: hsl(var(--warning)) solid 2px;
 			}
 		}
 	}
@@ -412,5 +415,15 @@
 			color: hsl(var(--team-two-text));
 			background-color: hsl(var(--team-two));
 		}
+	}
+
+	.cell .token {
+		--shadow-offset: 1px;
+		--shadow-blur: 2px;
+		--opposite-shadow-offset: calc(var(--shadow-offset) * -1);
+
+		box-shadow:
+			var(--shadow-offset) var(--shadow-offset) var(--shadow-blur) black,
+			var(--opposite-shadow-offset) (var(--opposite-shadow-offset)) var(--shadow-blur) white;
 	}
 </style>

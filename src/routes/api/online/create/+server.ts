@@ -1,11 +1,11 @@
+import type { GameConfig } from '$lib/classes/Game.svelte';
 import { createMatch } from '$lib/server/matches.server.svelte';
 
-export async function GET() {
-	const match = createMatch();
+export async function POST({ request }) {
+	const config: GameConfig = await request.json();
+	const match = createMatch(config);
 
 	const readable = match.readable;
-
-	console.log('Match created :', match.id);
 
 	return new Response(readable, {
 		headers: {

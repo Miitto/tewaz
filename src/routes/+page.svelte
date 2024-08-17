@@ -3,6 +3,10 @@
 	const roomLink = $derived(`/online/join/${roomCode}`);
 </script>
 
+<svelte:head>
+	<title>Tewăz</title>
+</svelte:head>
+
 <h1>Tewăz</h1>
 <main>
 	<div class="play">

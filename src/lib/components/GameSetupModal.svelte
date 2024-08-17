@@ -7,7 +7,7 @@
 		onNewConfig: (config: GameConfig) => void;
 	}
 
-	let { open = $bindable(false), onNewConfig }: Props = $props();
+	let { open = $bindable(false), onNewConfig: parentOnNewConfig }: Props = $props();
 
 	let dialog: HTMLDialogElement;
 
@@ -22,6 +22,11 @@
 	function close() {
 		open = false;
 	}
+
+	function onNewConfig(config: GameConfig) {
+		close();
+		parentOnNewConfig(config);
+	}
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -33,7 +38,7 @@
 	}}
 >
 	<div>
-		<GameSetup {onNewConfig} {close} />
+		<GameSetup {onNewConfig} />
 	</div>
 </dialog>
 

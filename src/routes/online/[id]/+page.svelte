@@ -18,19 +18,11 @@
 
 	let isSetup = $state(false);
 
-	$effect(() => {
-		if (matchExists) {
-			document.title = 'Tewăz - Online Play';
-		} else {
-			document.title = 'Tewăz - Match not found';
-		}
-	});
-
 	onMount(() => {
 		match?.setupBoard(matchString, pendingMoves);
 		isSetup = true;
 
-		match.listen();
+		if (matchExists) match.listen();
 	});
 
 	let match = $state(getMatch($page.params.id) ?? new ClientMatch($page.params.id, null));
@@ -71,6 +63,13 @@
 	}
 </script>
 
+<svelte:head>
+	{#if matchExists}
+		<title>Tewăz - Team {match!.team === Team.ONE ? 'One' : 'Two'}</title>
+	{:else}
+		<title>Tewăz - Match not found</title>
+	{/if}
+</svelte:head>
 {#if matchExists}
 	{#if isSetup}
 		<span>

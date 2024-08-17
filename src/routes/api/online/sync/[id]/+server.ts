@@ -1,5 +1,12 @@
+import type { GameConfig } from '$lib/classes/Game.svelte.js';
 import { getMatch } from '$lib/server/matches.server.svelte';
 import { error, json } from '@sveltejs/kit';
+
+export interface SyncResponse {
+	matchString: string;
+	pendingMoves: [[number, number], [number, number]][];
+	config: GameConfig;
+}
 
 export async function GET({ params }) {
 	const match = getMatch(params.id);
@@ -16,8 +23,13 @@ export async function GET({ params }) {
 			[move.target.x, move.target.y]
 		]) ?? [];
 
-	return json({
+	const config = match?.game.config;
+
+	const payload: SyncResponse = {
 		matchString: matchString,
-		pendingMoves: pendingMoves
-	});
+		pendingMoves: pendingMoves,
+		config: config
+	};
+
+	return json(payload);
 }

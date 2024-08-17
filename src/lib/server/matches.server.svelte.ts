@@ -1,10 +1,11 @@
+import type { GameConfig } from '$lib/classes/Game.svelte';
 import { ServerMatch } from '../classes/ServerMatch.server.svelte';
 import { uniqueId, type UID } from './util.server';
 
 const matches: ServerMatch[] = $state([]);
 
-export function createMatch(): ServerMatch {
-	const match = new ServerMatch(uniqueId());
+export function createMatch(config?: GameConfig): ServerMatch {
+	const match = new ServerMatch(uniqueId(), config);
 	matches.push(match);
 
 	return match;

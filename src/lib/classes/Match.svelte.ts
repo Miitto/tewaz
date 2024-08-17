@@ -1,5 +1,5 @@
 import type { UID } from '../server/util.server';
-import { Game } from './Game.svelte';
+import { Game, type GameConfig } from './Game.svelte';
 import { type Point } from './Coord';
 import { Team } from './Piece.svelte';
 
@@ -24,7 +24,12 @@ export class ClientMatch implements Match {
 
 	team: Team | null;
 
-	constructor(payload: UID | MatchPayload, team: Team | null, stream?: ReadableStream) {
+	constructor(
+		payload: UID | MatchPayload,
+		team: Team | null,
+		config?: Partial<GameConfig>,
+		stream?: ReadableStream
+	) {
 		if (typeof payload === 'object') {
 			this.id = payload.id;
 		} else {
@@ -32,6 +37,10 @@ export class ClientMatch implements Match {
 		}
 
 		this.team = team;
+
+		if (config) {
+			this.game = new Game(config);
+		}
 
 		this.stream = stream ?? null;
 	}
@@ -42,7 +51,7 @@ export class ClientMatch implements Match {
 		};
 	}
 
-	async getStream() {
+	async ensureStream() {
 		if (this.stream) {
 			return;
 		}
@@ -55,10 +64,26 @@ export class ClientMatch implements Match {
 		this.stream = response.body!.pipeThrough(new TextDecoderStream());
 	}
 
-	static async create(): Promise<ClientMatch> {
-		console.log('Creating Match');
-		const response = await fetch('/api/online/create');
-		console.log('Response:', response);
+	static async create(config?: Partial<GameConfig>): Promise<ClientMatch> {
+		// Need to decide which team to start on before sending data around, to ensure its the same across clients
+
+		if (config) {
+			if (config.startingTeam === null) {
+				config.startingTeam = Math.random() < 0.5 ? Team.ONE : Team.TWO;
+			}
+		} else {
+			config = {
+				startingTeam: Math.random() < 0.5 ? Team.ONE : Team.TWO
+			};
+		}
+
+		const response = await fetch('/api/online/create', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(config)
+		});
 
 		if (!response.ok) {
 			console.error('Failed to create room:', response.statusText);
@@ -70,9 +95,7 @@ export class ClientMatch implements Match {
 			throw new Error('Failed to create room');
 		}
 
-		const stream = response.body!.pipeThrough(new TextDecoderStream());
-
-		return new ClientMatch(id, Team.ONE, stream);
+		return new ClientMatch(id, Team.ONE, config);
 	}
 
 	async stageMove(position: Point, target: Point): Promise<boolean> {
@@ -145,7 +168,7 @@ export class ClientMatch implements Match {
 
 	async listen() {
 		if (!this.stream) {
-			await this.getStream();
+			await this.ensureStream();
 		}
 
 		const reader = this.stream!.getReader();
@@ -163,8 +186,6 @@ export class ClientMatch implements Match {
 			}
 
 			const { data, event } = JSON.parse(value);
-
-			console.log(data);
 
 			// Ignore events from the same team - they are already handled locally
 			if (data.team === this.team) {
