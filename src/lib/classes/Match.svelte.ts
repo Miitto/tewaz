@@ -1,8 +1,7 @@
 import type { UID } from '../server/util.server';
 import { Game } from './Game.svelte';
-import { Coord, type Point } from './Coord';
-import { Fish, Hunter, Team } from './Piece.svelte';
-import { Move } from './Move.svelte';
+import { type Point } from './Coord';
+import { Team } from './Piece.svelte';
 
 export interface MatchPayload {
 	id: UID;
@@ -135,40 +134,13 @@ export class ClientMatch implements Match {
 		});
 	}
 
+	/**
+	 * Set up the board from a string
+	 * @param str Board state as a string. Each set is separated by a space, with the first being the turn number. All sets afterwards are the rows, and each character in a row is a piece. '.' is empty, 'f' is fish'h' is hunter. Lowercase is team 2, uppercase is team 1
+	 * @param pendingMoves List of pending moves to set up
+	 */
 	setupBoard(str: string, pendingMoves: [[number, number], [number, number]][]) {
-		const board = this.game.board.board;
-
-		const [turn, ...rows] = str.split(' ');
-
-		this.game.turn = parseInt(turn);
-
-		rows.forEach((row, y) => {
-			const tiles = row.split('');
-			tiles.forEach((tile, x) => {
-				switch (tile) {
-					case '.':
-						board[y][x] = null;
-						break;
-					case 'f':
-						board[y][x] = new Fish(Team.TWO);
-						break;
-					case 'F':
-						board[y][x] = new Fish(Team.ONE);
-						break;
-					case 'h':
-						board[y][x] = new Hunter(Team.TWO);
-						break;
-					case 'H':
-						board[y][x] = new Hunter(Team.ONE);
-						break;
-				}
-			});
-		});
-
-		this.game.pendingMoves = pendingMoves.map(
-			([position, target]) =>
-				new Move(new Coord(position[0], position[1]), new Coord(target[0], target[1]), this.game)
-		);
+		this.game.setupBoard(str, pendingMoves);
 	}
 
 	async listen() {
@@ -207,7 +179,7 @@ export class ClientMatch implements Match {
 						false
 					);
 					break;
-				case 'unmove':
+				case 'un-move':
 					this.game.unstageMove([data.target.x, data.target.y]);
 					break;
 				case 'end-turn':

@@ -1,4 +1,3 @@
-import { PieceType, Team } from '$lib/classes/Piece.svelte';
 import { getMatch } from '$lib/server/matches.server.svelte';
 import type { PageServerLoad } from './$types';
 
@@ -7,27 +6,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const match = getMatch(id);
 
-	const matchString =
-		match?.game.turn.toString() +
-		' ' +
-		(match?.game.board.board.reduce(
-			(acc, row) =>
-				acc +
-				row.reduce((acc, cell) => {
-					if (cell === null) {
-						return acc + '.';
-					}
-					const letter = cell.type === PieceType.FISH ? 'f' : 'h';
-
-					if (cell.team === Team.ONE) {
-						return acc + letter.toUpperCase();
-					} else {
-						return acc + letter;
-					}
-				}, '') +
-				' ',
-			''
-		) ?? '');
+	const matchString = match?.matchString() ?? '';
 
 	const pendingMoves: [[number, number], [number, number]][] =
 		match?.game.pendingMoves.map((move) => [

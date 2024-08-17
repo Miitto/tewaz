@@ -24,8 +24,6 @@
 		} else {
 			document.title = 'Tewăz - Match not found';
 		}
-
-		console.log('Match exists:', matchExists);
 	});
 
 	onMount(() => {
@@ -71,10 +69,6 @@
 
 		match!.unstageMove(target);
 	}
-
-	// $effect(() => {
-	// 	console.log(legalMoves);
-	// });
 </script>
 
 {#if matchExists}
@@ -98,11 +92,11 @@
 					class="end-turn"
 					class:turn-one={match!.game.teamTurn == Team.ONE}
 					class:turn-two={match!.game.teamTurn == Team.TWO}
-					disabled={match!.game.movesUsed != match!.game.moveAllowance ||
+					disabled={match!.game.movesUsed != match!.game.config.moveAllowance ||
 						match!.game.teamTurn != match!.team}
 					onclick={() => match!.endTurn()}>End Turn</button
 				>
-				<p>Moves left: {match!.game.moveAllowance - match!.game.movesUsed}</p>
+				<p>Moves left: {match!.game.config.moveAllowance - match!.game.movesUsed}</p>
 				{#if match.team === null}
 					<p>You are Spectating</p>
 				{/if}

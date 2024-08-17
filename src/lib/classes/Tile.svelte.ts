@@ -1,4 +1,3 @@
-import { safeZoneCols, sandZoneCols, waterZoneCols } from './Board.svelte';
 import type { Coord } from './Coord';
 import type { Piece } from './Piece.svelte';
 
@@ -24,7 +23,13 @@ export class Tile {
 	danger = false;
 	type: Terrain;
 
-	constructor(piece: Piece | null, coords: Coord) {
+	constructor(
+		piece: Piece | null,
+		coords: Coord,
+		safeZoneCols: number[],
+		sandZoneCols: number[],
+		waterZoneCols: number[]
+	) {
 		this.piece = piece;
 		const y = coords.y;
 

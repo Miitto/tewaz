@@ -5,6 +5,16 @@ import { Team } from './Piece.svelte';
 import { Tile } from './Tile.svelte';
 
 // TODO: hold game config such as move allowance, team piece limits, etc in a new object - so they can be configured in the game
+export interface GameConfig {
+	teamMaxInSandCol: number;
+	teamMaxInWaterCol: number;
+	moveAllowance: number;
+
+	sandCols: number[];
+	waterCols: number[];
+
+	initialBoardSetup: string;
+}
 
 /**
  * Local game state
@@ -12,13 +22,15 @@ import { Tile } from './Tile.svelte';
  * Will hold game configuration and rules
  */
 export class Game {
-	/** Max pieces per team in a sand col */
-	teamMaxInSandCol = 2;
-	/** Max pieces per team in a water col */
-	teamMaxInWaterCol = 1;
-
-	/** Move cost allowed per turn - all must be used */
-	moveAllowance = 2;
+	config: GameConfig = {
+		teamMaxInSandCol: 2,
+		teamMaxInWaterCol: 1,
+		moveAllowance: 2,
+		sandCols: [4, 6],
+		waterCols: [5],
+		initialBoardSetup:
+			'0 ' + 'F..........f ' + 'F..........f ' + 'H..........h ' + 'F..........f ' + 'F..........f'
+	};
 
 	board: Board = $state(new Board());
 
@@ -27,6 +39,33 @@ export class Game {
 
 	/** Turn number for game */
 	turn: number = 0;
+
+	constructor(config?: Partial<GameConfig>) {
+		if (config?.initialBoardSetup) {
+			this.config.initialBoardSetup = config.initialBoardSetup;
+			this.setupBoard(config.initialBoardSetup, []);
+		}
+
+		if (config?.teamMaxInSandCol) {
+			this.config.teamMaxInSandCol = config.teamMaxInSandCol;
+		}
+
+		if (config?.teamMaxInWaterCol) {
+			this.config.teamMaxInWaterCol = config.teamMaxInWaterCol;
+		}
+
+		if (config?.moveAllowance) {
+			this.config.moveAllowance = config.moveAllowance;
+		}
+
+		if (config?.sandCols) {
+			this.config.sandCols = config.sandCols;
+		}
+
+		if (config?.waterCols) {
+			this.config.waterCols = config.waterCols;
+		}
+	}
 
 	/** Moves left in turn */
 	get movesUsed() {
@@ -37,7 +76,13 @@ export class Game {
 	tiles: Tile[][] = $derived(
 		this.board.board.map((row, i) =>
 			row.map((col, j) => {
-				const tile = new Tile(this.board.at(i, j), new Coord(i, j));
+				const tile = new Tile(
+					this.board.at(i, j),
+					new Coord(i, j),
+					[0, row.length - 1],
+					this.config.sandCols,
+					this.config.waterCols
+				);
 
 				// Check if the tile is moving
 				if (this.pendingMoves.some((m) => m.position.x == i && m.position.y == j)) {
@@ -57,10 +102,6 @@ export class Game {
 	/** Team whose turn it is */
 	get teamTurn() {
 		return this.turn % 2 === 0 ? Team.ONE : Team.TWO;
-	}
-
-	constructor() {
-		this.turn = 0;
 	}
 
 	/**
@@ -111,7 +152,7 @@ export class Game {
 	 */
 	endTurn() {
 		// This needs to be before any pieces are taken, otherwise the moves used will be incorrect
-		if (this.movesUsed < this.moveAllowance) {
+		if (this.movesUsed < this.config.moveAllowance) {
 			console.log('Not all moves used');
 			return false;
 		}
@@ -215,5 +256,24 @@ export class Game {
 	 */
 	applyPendingMoves(board: Board) {
 		this.pendingMoves.forEach((move) => move.commit(board, false));
+	}
+
+	/**
+	 * Set up the board from a string
+	 * @param str Board state as a string. Each set is separated by a space, with the first being the turn number. All sets afterwards are the rows, and each character in a row is a piece. '.' is empty, 'f' is fish'h' is hunter. Lowercase is team 2, uppercase is team 1
+	 * @param pendingMoves List of pending moves to set up
+	 */
+	setupBoard(str: string, pendingMoves: [[number, number], [number, number]][]) {
+		const [turn, ...rows] = str.split(' ');
+		console.log(turn, rows);
+
+		this.turn = parseInt(turn);
+
+		this.board.setupBoard(rows);
+
+		this.pendingMoves = pendingMoves.map(
+			([position, target]) =>
+				new Move(new Coord(position[0], position[1]), new Coord(target[0], target[1]), this)
+		);
 	}
 }

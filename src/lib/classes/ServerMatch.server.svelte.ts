@@ -5,6 +5,7 @@ import { type MovePayload } from './Move.svelte';
 import { Game } from './Game.svelte';
 import type { Match, MatchPayload } from './Match.svelte';
 import type { Point } from './Coord';
+import { PieceType, Team } from './Piece.svelte';
 
 export class ServerMatch implements Match {
 	id: UID;
@@ -16,7 +17,7 @@ export class ServerMatch implements Match {
 		const { readable, subscribe } = createSSE();
 
 		subscribe(this.emitter, 'move');
-		subscribe(this.emitter, 'unmove');
+		subscribe(this.emitter, 'un-move');
 		subscribe(this.emitter, 'end-turn');
 
 		return readable;
@@ -45,7 +46,7 @@ export class ServerMatch implements Match {
 	async unstageMove(target: Point) {
 		this.game.unstageMove(target);
 
-		this.emitter.emit('unmove', { target: target, team: this.game.teamTurn });
+		this.emitter.emit('un-move', { target: target, team: this.game.teamTurn });
 		return true;
 	}
 
@@ -57,5 +58,30 @@ export class ServerMatch implements Match {
 
 		this.emitter.emit('end-turn', { team: team });
 		return true;
+	}
+
+	matchString(): string {
+		return (
+			this.game.turn.toString() +
+			' ' +
+			this.game.board.board.reduce(
+				(acc, row) =>
+					acc +
+					row.reduce((acc, cell) => {
+						if (cell === null) {
+							return acc + '.';
+						}
+						const letter = cell.type === PieceType.FISH ? 'f' : 'h';
+
+						if (cell.team === Team.ONE) {
+							return acc + letter.toUpperCase();
+						} else {
+							return acc + letter;
+						}
+					}, '') +
+					' ',
+				''
+			)
+		);
 	}
 }

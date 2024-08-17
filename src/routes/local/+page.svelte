@@ -1,13 +1,14 @@
 <script lang="ts">
-	import { Game } from '$lib/classes/Game.svelte';
+	import { Game, type GameConfig } from '$lib/classes/Game.svelte';
 	import '$lib/styles/board.scss';
 	import { Team } from '$lib/classes/Piece.svelte';
 	import type { Move } from '$lib/classes/Move.svelte';
 	import { Coord, type Point } from '$lib/classes/Coord';
 	import Rules from '$lib/components/Rules.svelte';
 	import Board from '$lib/components/Board.svelte';
+	import GameSetupModal from '$lib/components/GameSetupModal.svelte';
 
-	let game = new Game();
+	let game = $state(new Game());
 
 	/** Piece selected by the user */
 	let selectedPiece: Coord | null = $state(null);
@@ -34,9 +35,11 @@
 		game.unstageMove(target);
 	}
 
-	// $effect(() => {
-	// 	console.log(legalMoves);
-	// });
+	let showGameSetup = $state(false);
+
+	function onNewConfig(config: GameConfig) {
+		game = new Game(config);
+	}
 </script>
 
 <span>
@@ -51,10 +54,16 @@
 			class="end-turn"
 			class:turn-one={game.teamTurn == Team.ONE}
 			class:turn-two={game.teamTurn == Team.TWO}
-			disabled={game.movesUsed != game.moveAllowance}
+			disabled={game.movesUsed != game.config.moveAllowance}
 			onclick={() => game.endTurn()}>End Turn</button
 		>
-		<p>Moves left: {game.moveAllowance - game.movesUsed}</p>
+		<p>Moves left: {game.config.moveAllowance - game.movesUsed}</p>
+		<button
+			onclick={() => {
+				showGameSetup = true;
+			}}>Configure Game</button
+		>
+		<GameSetupModal bind:open={showGameSetup} {onNewConfig} />
 	</div>
 	<div class="right">
 		<h2>Rules</h2>

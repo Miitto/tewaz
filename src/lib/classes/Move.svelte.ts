@@ -1,4 +1,4 @@
-import { Board, boardHeight, boardWidth, sandZoneCols, waterZoneCols } from './Board.svelte';
+import { Board } from './Board.svelte';
 import { Coord, type Point } from './Coord';
 import type { Game } from './Game.svelte';
 import { Team, type Piece } from './Piece.svelte';
@@ -76,19 +76,19 @@ export class Move {
 		}
 
 		// Check if the piece would exceed the move allowance
-		if (!committing && this.game.movesUsed > this.game.moveAllowance - this.piece.moveCost) {
+		if (!committing && this.game.movesUsed > this.game.config.moveAllowance - this.piece.moveCost) {
 			if (committing || logAnyway) console.log('Move allowance exceeded');
 			return false;
 		}
 
 		// Check if the move is within bounds
-		if (nx < 0 || nx >= boardHeight || ny < 0 || ny >= boardWidth) {
+		if (nx < 0 || nx >= this.game.board.height || ny < 0 || ny >= this.game.board.width) {
 			if (committing || logAnyway) console.log('Out of bounds');
 			return false;
 		}
 
 		// Opponent's safe zone
-		if (this.piece.team === Team.ONE && ny === boardWidth - 1) {
+		if (this.piece.team === Team.ONE && ny === this.game.board.width - 1) {
 			if (committing || logAnyway) console.log('Opponent safe zone');
 			return false;
 		} else if (this.piece.team === Team.TWO && ny === 0) {
@@ -103,18 +103,18 @@ export class Move {
 		}
 
 		// Ensure column is not at max capacity
-		if (sandZoneCols.includes(ny)) {
+		if (this.game.config.sandCols.includes(ny)) {
 			if (
 				this.game.stagedTeamColCount(ny, this.piece.team, this.position) >=
-				this.game.teamMaxInSandCol
+				this.game.config.teamMaxInSandCol
 			) {
 				if (committing || logAnyway) console.log('Sand col full');
 				return false;
 			}
-		} else if (waterZoneCols.includes(ny)) {
+		} else if (this.game.config.waterCols.includes(ny)) {
 			if (
 				this.game.stagedTeamColCount(ny, this.piece.team, this.position) >=
-				this.game.teamMaxInWaterCol
+				this.game.config.teamMaxInWaterCol
 			) {
 				if (committing || logAnyway) console.log('Water col full');
 				return false;
@@ -172,7 +172,7 @@ export class Move {
 	}
 
 	static findHomePositions(game: Game, team: Team): Coord[] {
-		const safeCol = team === Team.ONE ? 0 : boardWidth - 1;
+		const safeCol = team === Team.ONE ? 0 : game.board.width - 1;
 
 		// Find empty safe col slot
 		const rows = game.board.board

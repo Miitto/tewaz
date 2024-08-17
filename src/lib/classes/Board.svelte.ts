@@ -1,12 +1,5 @@
 import { Coord, type Point } from './Coord';
-import { Fish, Hunter, Team, type Piece } from './Piece.svelte';
-
-export const safeZoneCols = [0, 10];
-export const sandZoneCols = [4, 6];
-export const waterZoneCols = [5];
-
-export const boardWidth = 11;
-export const boardHeight = 5;
+import { Fish, Hunter, PieceType, Team, type Piece } from './Piece.svelte';
 
 /**
  * Represents a board with pieces on it.
@@ -15,9 +8,14 @@ export const boardHeight = 5;
 export class Board {
 	board: (Piece | null)[][];
 
-	constructor(copy?: Board) {
-		if (copy) {
-			this.board = copy.board.map((row) => row.slice());
+	constructor(setup?: Board | string[]) {
+		if (setup instanceof Board) {
+			this.board = setup.board.map((row) => row.slice());
+		} else if (Array.isArray(setup)) {
+			this.board = Array.from({ length: setup.length }, () =>
+				Array.from({ length: setup[0].length }, () => null)
+			);
+			this.setupBoard(setup);
 		} else {
 			// make a 5x11 board with pieces in end columns
 			this.board = Array.from({ length: 5 }, () => Array.from({ length: 11 }, () => null));
@@ -26,6 +24,14 @@ export class Board {
 				this.board[i][10] = i == 2 ? new Hunter(Team.TWO) : new Fish(Team.TWO);
 			}
 		}
+	}
+
+	get width(): number {
+		return this.board[0].length;
+	}
+
+	get height(): number {
+		return this.board.length;
 	}
 
 	at(row: Point | number, col?: number): Piece | null {
@@ -69,6 +75,36 @@ export class Board {
 	isInBounds(pos: Point): boolean {
 		const [row, col] = pos;
 		return row >= 0 && row < this.board.length && col >= 0 && col < this.board[0].length;
+	}
+
+	setupBoard(rows: string[]) {
+		rows = rows.filter((row) => row.length > 0);
+		this.board = Array.from({ length: rows.length }, () =>
+			Array.from({ length: rows[0].length }, () => null)
+		);
+
+		rows.forEach((row, y) => {
+			const tiles = row.split('');
+			tiles.forEach((tile, x) => {
+				switch (tile) {
+					case '.':
+						this.board[y][x] = null;
+						break;
+					case 'f':
+						this.board[y][x] = new Fish(Team.TWO);
+						break;
+					case 'F':
+						this.board[y][x] = new Fish(Team.ONE);
+						break;
+					case 'h':
+						this.board[y][x] = new Hunter(Team.TWO);
+						break;
+					case 'H':
+						this.board[y][x] = new Hunter(Team.ONE);
+						break;
+				}
+			});
+		});
 	}
 
 	/**
@@ -185,5 +221,26 @@ export class Board {
 		} else {
 			return true;
 		}
+	}
+
+	toString(): string {
+		return this.board.reduce(
+			(acc, row) =>
+				acc +
+				row.reduce((acc, cell) => {
+					if (cell === null) {
+						return acc + '.';
+					}
+					const letter = cell.type === PieceType.FISH ? 'f' : 'h';
+
+					if (cell.team === Team.ONE) {
+						return acc + letter.toUpperCase();
+					} else {
+						return acc + letter;
+					}
+				}, '') +
+				' ',
+			''
+		);
 	}
 }
