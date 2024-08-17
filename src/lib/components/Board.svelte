@@ -19,6 +19,7 @@
 
 <div
 	class="board"
+	style={`--rows: ${game.board.height}; --cols: ${game.board.width};`}
 	class:turn-one={game.teamTurn == Team.ONE}
 	class:turn-two={game.teamTurn == Team.TWO}
 >

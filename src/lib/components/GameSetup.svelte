@@ -175,10 +175,10 @@
 		<label for="rows">Rows</label>
 		<label for="cols">Columns</label>
 		<input type="number" bind:value={rows} min="1" />
-		<input type="number" bind:value={cols} min="1" />
+		<input type="number" bind:value={cols} min="5" />
 	</div>
 
-	<div class="board">
+	<div class="board" style={`--rows: ${rows}; --cols: ${cols};`}>
 		{#each board as r, row}
 			<div class="row">
 				{#each r as c, col}
@@ -291,10 +291,22 @@
 		margin: 0;
 	}
 
+	input {
+		min-width: 0;
+	}
+
 	.container {
 		display: flex;
 		flex-direction: column;
 		gap: 1em;
+
+		max-width: 1000px;
+
+		align-items: center;
+
+		margin-inline: auto;
+
+		min-width: 0;
 	}
 
 	.save {
@@ -320,6 +332,7 @@
 
 	.size,
 	.settings {
+		max-width: 100%;
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
 		column-gap: 1em;
@@ -339,17 +352,39 @@
 		grid-template-columns: repeat(4, 1fr);
 	}
 
+	.board {
+		display: grid;
+		grid-template-columns: repeat(var(--cols), 1fr);
+		grid-template-rows: repeat(var(--rows), 1fr);
+
+		aspect-ratio: var(--cols) / var(--rows);
+		flex: 1 1 50svh;
+		overflow: hidden;
+		width: fit-content;
+		max-width: 100%;
+	}
+
 	.row {
-		display: flex;
+		display: grid;
+		grid-template-columns: subgrid;
+		grid-column: 1 / -1;
+
+		aspect-ratio: var(--cols) / 1;
+
+		height: 100%;
+		overflow: hidden;
 	}
 
 	.cell {
+		border: 1px solid black;
 		width: 100%;
 		height: 100%;
+
+		padding: 0;
+
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		aspect-ratio: 1 / 1;
 		border: 1px solid hsl(var(--text));
 		background-color: hsl(var(--bg));
 
@@ -376,6 +411,7 @@
 
 	.paint,
 	.pieces {
+		width: 100%;
 		display: flex;
 		flex-direction: column;
 		gap: 0.25em;
