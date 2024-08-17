@@ -14,6 +14,7 @@ export interface GameConfig {
 	waterCols: number[];
 
 	initialBoardSetup: string;
+	startingTeam: Team | null;
 }
 
 /**
@@ -28,6 +29,7 @@ export class Game {
 		moveAllowance: 2,
 		sandCols: [4, 6],
 		waterCols: [5],
+		startingTeam: null,
 		initialBoardSetup:
 			'0 ' + 'F..........f ' + 'F..........f ' + 'H..........h ' + 'F..........f ' + 'F..........f'
 	};
@@ -41,29 +43,38 @@ export class Game {
 	turn: number = 0;
 
 	constructor(config?: Partial<GameConfig>) {
-		if (config?.initialBoardSetup) {
+		if (!config) {
+			return;
+		}
+		if (config.initialBoardSetup) {
 			this.config.initialBoardSetup = config.initialBoardSetup;
 			this.setupBoard(config.initialBoardSetup, []);
 		}
 
-		if (config?.teamMaxInSandCol) {
+		if (config.teamMaxInSandCol) {
 			this.config.teamMaxInSandCol = config.teamMaxInSandCol;
 		}
 
-		if (config?.teamMaxInWaterCol) {
+		if (config.teamMaxInWaterCol) {
 			this.config.teamMaxInWaterCol = config.teamMaxInWaterCol;
 		}
 
-		if (config?.moveAllowance) {
+		if (config.moveAllowance) {
 			this.config.moveAllowance = config.moveAllowance;
 		}
 
-		if (config?.sandCols) {
+		if (config.sandCols) {
 			this.config.sandCols = config.sandCols;
 		}
 
-		if (config?.waterCols) {
+		if (config.waterCols) {
 			this.config.waterCols = config.waterCols;
+		}
+
+		if ((config.startingTeam ?? null) !== null) {
+			this.config.startingTeam = config.startingTeam as Team;
+		} else {
+			this.config.startingTeam = Math.random() > 0.5 ? Team.ONE : Team.TWO;
 		}
 	}
 
@@ -101,7 +112,7 @@ export class Game {
 
 	/** Team whose turn it is */
 	get teamTurn() {
-		return this.turn % 2 === 0 ? Team.ONE : Team.TWO;
+		return this.turn % 2 === (this.config.startingTeam === Team.ONE ? 0 : 1) ? Team.ONE : Team.TWO;
 	}
 
 	/**

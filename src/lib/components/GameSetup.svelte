@@ -47,6 +47,7 @@
 	let moveAllowance = $state(2);
 	let teamMaxInSandCol = $state(2);
 	let teamMaxInWaterCol = $state(1);
+	let startingTeam = $state<Team | null>(null);
 
 	let calcBoard: (Piece | null)[][] = $derived(
 		Array.from({ length: rows }, () => Array.from({ length: cols }, () => null))
@@ -162,7 +163,8 @@
 			teamMaxInSandCol,
 			teamMaxInWaterCol,
 			sandCols,
-			waterCols
+			waterCols,
+			startingTeam
 		});
 
 		close();
@@ -265,9 +267,15 @@
 		<label for="moveAllowance">Move Allowance</label>
 		<label for="maxSandCol">Max in Sand Column</label>
 		<label for="maxWaterCol">Max in Water Column</label>
+		<label for="startingTeam">Starting Team</label>
 		<input type="number" bind:value={moveAllowance} min="1" />
 		<input type="number" bind:value={teamMaxInSandCol} min="1" />
 		<input type="number" bind:value={teamMaxInWaterCol} min="1" />
+		<select bind:value={startingTeam}>
+			<option value={null}>Random</option>
+			<option value={Team.ONE}>Team One</option>
+			<option value={Team.TWO}>Team Two</option>
+		</select>
 	</div>
 
 	<div class="save">
@@ -314,6 +322,7 @@
 		column-gap: 1em;
 		justify-content: space-between;
 
+		select,
 		input {
 			padding: 0.25em 0.5em;
 			border: 1px solid hsl(var(--text));
@@ -324,7 +333,7 @@
 	}
 
 	.settings {
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(4, 1fr);
 	}
 
 	.row {
