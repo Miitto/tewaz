@@ -23,12 +23,16 @@ export class ClientMatch implements Match {
 	stream: ReadableStream | null = null;
 	game: Game = $state(new Game());
 
-	constructor(payload: UID | MatchPayload, stream?: ReadableStream) {
+	team: Team | null;
+
+	constructor(payload: UID | MatchPayload, team: Team | null, stream?: ReadableStream) {
 		if (typeof payload === 'object') {
 			this.id = payload.id;
 		} else {
 			this.id = payload;
 		}
+
+		this.team = team;
 
 		this.stream = stream ?? null;
 	}
@@ -74,7 +78,7 @@ export class ClientMatch implements Match {
 
 		const stream = response.body!.pipeThrough(new TextDecoderStream());
 
-		return new ClientMatch(id, stream);
+		return new ClientMatch(id, Team.ONE, stream);
 	}
 
 	async stageMove(position: Point, target: Point): Promise<boolean> {

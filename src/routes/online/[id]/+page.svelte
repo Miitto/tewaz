@@ -5,8 +5,10 @@
 	import { Coord, type Point } from '$lib/classes/Coord';
 	import Rules from '$lib/components/Rules.svelte';
 	import Board from '$lib/components/Board.svelte';
-	import { ClientMatch } from '$lib/classes/Match.svelte';
 	import { page } from '$app/stores';
+	import { getMatch } from '$lib/client/currentMatches.svelte.js';
+	import { ClientMatch } from '$lib/classes/Match.svelte';
+	import { onMount } from 'svelte';
 
 	const { data } = $props();
 
@@ -26,20 +28,25 @@
 		console.log('Match exists:', matchExists);
 	});
 
-	$effect(() => {
-		match.setupBoard(matchString, pendingMoves);
+	onMount(() => {
+		match?.setupBoard(matchString, pendingMoves);
 		isSetup = true;
 	});
 
-	let match = new ClientMatch($page.params.id);
+	let match = $state(getMatch($page.params.id) ?? new ClientMatch($page.params.id, null));
 
 	/** Piece selected by the user */
 	let selectedPiece: Coord | null = $state(null);
 
 	/** Moves the selected piece can make */
-	let legalMoves: Move[] = $derived(match.game.getMoves(selectedPiece));
+	let legalMoves: Move[] = $derived(match?.game.getMoves(selectedPiece) ?? []);
 
 	function selectPiece(pos: Coord) {
+		if (match!.game.teamTurn != match!.team) {
+			console.log('Not your turn');
+			return;
+		}
+
 		if (selectedPiece && pos.equals(selectedPiece)) {
 			selectedPiece = null;
 		} else {
@@ -47,15 +54,15 @@
 		}
 	}
 
-	function stageMove(pos: Coord) {
+	function stageMove(pos: Point) {
 		if (selectedPiece) {
-			match.stageMove(selectedPiece, pos);
+			match!.stageMove(selectedPiece, pos);
 			selectedPiece = null;
 		}
 	}
 
 	function unstageMove(target: Point) {
-		match.unstageMove(target);
+		match!.unstageMove(target);
 	}
 
 	// $effect(() => {
@@ -73,7 +80,7 @@
 		<main>
 			<div class="left">
 				<Board
-					game={match.game}
+					game={match!.game}
 					{selectedPiece}
 					{legalMoves}
 					{selectPiece}
@@ -82,12 +89,15 @@
 				/>
 				<button
 					class="end-turn"
-					class:turn-one={match.game.teamTurn == Team.ONE}
-					class:turn-two={match.game.teamTurn == Team.TWO}
-					disabled={match.game.movesUsed != match.game.moveAllowance}
-					onclick={() => match.endTurn()}>End Turn</button
+					class:turn-one={match!.game.teamTurn == Team.ONE}
+					class:turn-two={match!.game.teamTurn == Team.TWO}
+					disabled={match!.game.movesUsed != match!.game.moveAllowance}
+					onclick={() => match!.endTurn()}>End Turn</button
 				>
-				<p>Moves left: {match.game.moveAllowance - match.game.movesUsed}</p>
+				<p>Moves left: {match!.game.moveAllowance - match!.game.movesUsed}</p>
+				{#if match.team === null}
+					<p>You are Spectating</p>
+				{/if}
 			</div>
 			<div class="right">
 				<h2>Rules</h2>
@@ -124,6 +134,10 @@
 			margin: 0;
 			width: fit-content;
 		}
+	}
+
+	p {
+		margin: 0;
 	}
 
 	.separate {
