@@ -63,6 +63,11 @@
 				showGameSetup = true;
 			}}>Configure Game</button
 		>
+		<button
+			onclick={() => {
+				game = new Game();
+			}}>New Game</button
+		>
 		<GameSetupModal bind:open={showGameSetup} {onNewConfig} />
 	</div>
 	<div class="right">
