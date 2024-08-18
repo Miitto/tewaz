@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"dev:host": "vite dev --host",
-		"build": "vite build",
+		"build": "npm run build:drizzle && vite build",
 		"preview": "vite preview",
 		"test": "npm run test:integration && npm run test:unit",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -13,7 +13,10 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:integration": "playwright test",
-		"test:unit": "vitest"
+		"test:unit": "vitest",
+		"generate": "drizzle-kit generate",
+		"migrate": "drizzle-kit migrate",
+		"build:drizzle": "npm run generate && npm run migrate"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.28.1",
@@ -37,5 +40,10 @@
 		"vite": "^5.0.3",
 		"vitest": "^2.0.0"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"better-sqlite3": "^11.1.2",
+		"drizzle-kit": "^0.24.0",
+		"drizzle-orm": "^0.33.0"
+	}
 }
