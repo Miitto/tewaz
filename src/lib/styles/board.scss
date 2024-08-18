@@ -132,7 +132,8 @@
 	}
 
 	.danger {
-		outline: hsl(var(--danger)) solid 2px;
+		outline: hsl(var(--danger)) solid 3px;
+		outline-offset: -3px;
 	}
 }
 
