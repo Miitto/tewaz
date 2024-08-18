@@ -68,7 +68,7 @@ export class ClientMatch implements Match {
 		const response = await fetch(`/api/online/connect/${this.id}`);
 
 		if (!response.ok) {
-			console.error('Failed to create room:', response.statusText);
+			throw new Error('Failed to create room. Response ' + response.statusText);
 		}
 
 		this.stream = response.body!.pipeThrough(new TextDecoderStream());

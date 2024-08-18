@@ -186,7 +186,6 @@ export class Game {
 			}
 		});
 
-		console.log('Ending turn');
 		this.turn++;
 
 		return true;

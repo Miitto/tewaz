@@ -170,7 +170,6 @@ export class Move {
 	}
 
 	isDangerous(): boolean {
-		// FIXME: Not working
 		return this.game.board.posIsDangerous(this.target, this.piece.team);
 	}
 
