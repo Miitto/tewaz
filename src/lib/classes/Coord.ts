@@ -25,15 +25,7 @@ export class Coord {
 	}
 
 	equals(other: Point): boolean {
-		let row: number;
-		let col: number;
-		if (Array.isArray(other)) {
-			row = other[0];
-			col = other[1];
-		} else {
-			row = other.x;
-			col = other.y;
-		}
+		const [row, col] = other;
 		return this.x === row && this.y === col;
 	}
 

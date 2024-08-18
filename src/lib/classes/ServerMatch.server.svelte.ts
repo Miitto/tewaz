@@ -60,7 +60,7 @@ export class ServerMatch implements Match {
 		return true;
 	}
 
-	matchString(): string {
+	gameString(): string {
 		return (
 			this.game.turn.toString() +
 			' ' +

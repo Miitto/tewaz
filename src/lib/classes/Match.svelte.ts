@@ -65,6 +65,7 @@ export class ClientMatch implements Match {
 		if (this.streamValid()) {
 			return;
 		}
+
 		const response = await fetch(`/api/online/connect/${this.id}`);
 
 		if (!response.ok) {
@@ -115,7 +116,7 @@ export class ClientMatch implements Match {
 			return false;
 		}
 
-		const move = this.game.pendingMoves[this.game.pendingMoves.length - 1];
+		const move = this.game.stagedMoves[this.game.stagedMoves.length - 1];
 
 		const response = await fetch(`/api/online/stage-move/${this.id}`, {
 			method: 'POST',
@@ -240,6 +241,7 @@ export class ClientMatch implements Match {
 				case 'end-turn':
 					this.game.endTurn();
 					break;
+				// Not really a thing yet
 				case 'setup':
 					this.setupBoard(data.board, data.pendingMoves);
 					break;

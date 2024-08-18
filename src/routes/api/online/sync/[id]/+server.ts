@@ -15,10 +15,10 @@ export async function GET({ params }) {
 		error(404, 'Match not found');
 	}
 
-	const matchString = match?.matchString() ?? '';
+	const matchString = match?.gameString() ?? '';
 
 	const pendingMoves: [[number, number], [number, number]][] =
-		match?.game.pendingMoves.map((move) => [
+		match?.game.stagedMoves.map((move) => [
 			[move.position.x, move.position.y],
 			[move.target.x, move.target.y]
 		]) ?? [];

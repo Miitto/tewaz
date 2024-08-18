@@ -36,7 +36,7 @@ export class Game {
 	board: Board = $state(new Board());
 
 	/** Uncommitted Moves */
-	pendingMoves: Move[] = $state([]);
+	stagedMoves: Move[] = $state([]);
 
 	/** Turn number for game */
 	turn: number = 0;
@@ -79,7 +79,7 @@ export class Game {
 
 	/** Moves left in turn */
 	get movesUsed() {
-		return this.pendingMoves.reduce((acc, cur) => acc + cur.piece.moveCost, 0);
+		return this.stagedMoves.reduce((acc, cur) => acc + cur.piece.moveCost, 0);
 	}
 
 	/** Calculated tiles on the board */
@@ -95,12 +95,12 @@ export class Game {
 				);
 
 				// Check if the tile is moving
-				if (this.pendingMoves.some((m) => m.position.x == i && m.position.y == j)) {
+				if (this.stagedMoves.some((m) => m.position.x == i && m.position.y == j)) {
 					tile.moving = true;
 				}
 
 				// Check if a tile has been moved here
-				if (this.pendingMoves.some((m) => m.target.x == i && m.target.y == j)) {
+				if (this.stagedMoves.some((m) => m.target.x == i && m.target.y == j)) {
 					tile.movingTo = true;
 				}
 
@@ -123,7 +123,7 @@ export class Game {
 	stageMove(coords: Point, target: Point, logFailure: boolean = false): boolean {
 		const move = new Move(coords, target, this);
 		if (move.isValid(false, logFailure)) {
-			this.pendingMoves.push(move);
+			this.stagedMoves.push(move);
 			return true;
 		}
 		return false;
@@ -134,11 +134,11 @@ export class Game {
 	 * @param target position of the staged move target
 	 */
 	unstageMove(target: Point) {
-		this.pendingMoves = this.pendingMoves.filter((move) => !move.hasTarget(target));
-		let preLen = this.pendingMoves.length + 1;
-		while (preLen > this.pendingMoves.length) {
-			preLen = this.pendingMoves.length;
-			this.pendingMoves = this.pendingMoves.filter((move) => move.isValid());
+		this.stagedMoves = this.stagedMoves.filter((move) => !move.hasTarget(target));
+		let preLen = this.stagedMoves.length + 1;
+		while (preLen > this.stagedMoves.length) {
+			preLen = this.stagedMoves.length;
+			this.stagedMoves = this.stagedMoves.filter((move) => move.isValid());
 		}
 	}
 
@@ -147,11 +147,11 @@ export class Game {
 	 * @returns if all moves have been committed
 	 */
 	commitStagedMoves(): boolean {
-		if (this.pendingMoves.some((move) => !move.isValid(true))) {
+		if (this.stagedMoves.some((move) => !move.isValid(true))) {
 			console.log('Some moves cannot be committed');
 			return false;
 		}
-		this.pendingMoves.forEach((move) => {
+		this.stagedMoves.forEach((move) => {
 			move.commit();
 		});
 		return true;
@@ -167,7 +167,7 @@ export class Game {
 			return false;
 		}
 
-		const dangerousMoves = this.pendingMoves.filter((move) => move.isDangerous());
+		const dangerousMoves = this.stagedMoves.filter((move) => move.isDangerous());
 
 		dangerousMoves.map((move) => {
 			move.piece.flip();
@@ -199,21 +199,11 @@ export class Game {
 	 * @returns number of pieces in the column from the given team
 	 */
 	stagedTeamColCount(col: number, team: Team, moveOriginExclude: Coord | null = null): number {
-		// rows in this column that are moving.
-		const movingRows = this.pendingMoves
-			.filter((move) => move.position.y === col)
-			.map((move) => move.position.x);
+		const board = new Board(this.board);
 
-		// Count pieces in this column, passing in the moving rows to exclude them from the count
-		const current = this.board.teamColCount(col, team, moveOriginExclude, movingRows);
+		this.applyStagedMoves(board);
 
-		// Count pending moves that would affect this column, excluding the move being checked
-		const pending = this.pendingMoves.filter(
-			(move) =>
-				move.target.y === col && move.piece.team === team && move.position !== moveOriginExclude
-		);
-
-		return current + pending.length;
+		return board.teamColCount(col, team, moveOriginExclude);
 	}
 
 	/**
@@ -245,7 +235,7 @@ export class Game {
 
 		// Apply all pending moves to a new board so we get up to date information
 		const board = new Board(this.board);
-		this.pendingMoves.forEach((move) => move.commit(board, false));
+		this.stagedMoves.forEach((move) => move.commit(board, false));
 
 		return (
 			(board
@@ -263,8 +253,8 @@ export class Game {
 	 * Apply all pending moves to a given board. Will not remove the moves from the pending list. Used for creating a board state with pending moves
 	 * @param board board to apply moves to
 	 */
-	applyPendingMoves(board: Board) {
-		this.pendingMoves.forEach((move) => move.commit(board, false));
+	applyStagedMoves(board: Board) {
+		this.stagedMoves.forEach((move) => move.commit(board, false));
 	}
 
 	/**
@@ -279,7 +269,7 @@ export class Game {
 
 		this.board.setupBoard(rows);
 
-		this.pendingMoves = pendingMoves.map(
+		this.stagedMoves = pendingMoves.map(
 			([position, target]) =>
 				new Move(new Coord(position[0], position[1]), new Coord(target[0], target[1]), this)
 		);

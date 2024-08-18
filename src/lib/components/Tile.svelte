@@ -22,9 +22,9 @@
 	const hasSelectedPiece = $derived(selectedPiece != null);
 	const thisIsSelectedPiece = $derived(selectedPiece?.equals(pos));
 
-	const pieceMovingHere = $derived(game.pendingMoves.some((move) => move.hasTarget(pos)));
+	const pieceMovingHere = $derived(game.stagedMoves.some((move) => move.hasTarget(pos)));
 	const atRisk = $derived(
-		game.pendingMoves.some((move) =>
+		game.stagedMoves.some((move) =>
 			move.willCaptureCoords().some((other: Coord) => pos.equals(other))
 		)
 	);

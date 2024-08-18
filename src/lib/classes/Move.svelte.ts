@@ -127,7 +127,7 @@ export class Move {
 
 		const board = new Board(this.game.board); // Copy board
 
-		this.game.applyPendingMoves(board);
+		this.game.applyStagedMoves(board);
 
 		// Ensure it isn't hopping over pieces
 		while (xOffset !== x || yOffset !== y) {
@@ -155,7 +155,7 @@ export class Move {
 			board = this.game.board;
 		}
 
-		if (removeMove) this.game.pendingMoves = this.game.pendingMoves.filter((move) => move !== this);
+		if (removeMove) this.game.stagedMoves = this.game.stagedMoves.filter((move) => move !== this);
 
 		board.board[this.position.x][this.position.y] = null;
 
@@ -207,7 +207,7 @@ export class Move {
 		const board = new Board(this.game.board); // Copy board
 
 		// Apply all pending moves to new board
-		this.game.pendingMoves.forEach((move) => {
+		this.game.stagedMoves.forEach((move) => {
 			move.commit(board, false);
 		});
 
