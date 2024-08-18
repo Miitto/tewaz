@@ -12,7 +12,7 @@ export function createSSE(last_id = 0, retry = 0) {
 		start(controller) {
 			controller.enqueue(': hello\n\n');
 
-			if (retry > 0) controller.enqueue(`retry: ${retry}\n\n`);
+			if (retry > 0) controller.enqueue(`: retry: ${retry}\n\n`);
 		},
 		transform({ event, data }, controller) {
 			const obj: Payload = {

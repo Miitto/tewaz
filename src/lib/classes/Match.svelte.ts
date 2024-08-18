@@ -176,6 +176,7 @@ export class ClientMatch implements Match {
 		this.game.setupBoard(str, pendingMoves);
 	}
 
+	// TODO: Getting error in input stream
 	async listen() {
 		if (!this.stream) {
 			await this.ensureStream();
@@ -189,7 +190,25 @@ export class ClientMatch implements Match {
 		const reader = this.stream!.getReader();
 
 		while (true) {
-			const { value, done } = await reader.read();
+			let value: string;
+			let done: boolean;
+
+			try {
+				const { value: v, done: d } = await reader.read();
+				value = v;
+				done = d;
+			} catch (e) {
+				console.error('Error reading stream:', e);
+
+				try {
+					await reader.cancel();
+					await this.ensureStream();
+					continue;
+				} catch (e) {
+					console.error('Error resetting stream:', e);
+					break;
+				}
+			}
 
 			if (done) {
 				break;

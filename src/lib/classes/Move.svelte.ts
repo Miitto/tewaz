@@ -111,6 +111,7 @@ export class Move {
 				if (committing || logAnyway) console.log('Sand col full');
 				return false;
 			}
+			// FIXME: Managed to move two pieces into the water column
 		} else if (this.game.config.waterCols.includes(ny)) {
 			if (
 				this.game.stagedTeamColCount(ny, this.piece.team, this.position) >=
@@ -134,6 +135,9 @@ export class Move {
 				if (committing || logAnyway) console.log('Piece in the way at', xOffset, yOffset);
 				return false;
 			}
+
+			// TODO: Check if hopping over full water / sand col
+
 			if (dx != 0 && xOffset !== x) {
 				xOffset -= dx > 0 ? 1 : -1;
 			}
@@ -166,6 +170,7 @@ export class Move {
 	}
 
 	isDangerous(): boolean {
+		// FIXME: Not working
 		return this.game.board.posIsDangerous(this.target, this.piece.team);
 	}
 
